@@ -27,19 +27,21 @@ object AuthService {
       private val F = Sync[F]
 
       override def signup(email: String, password: String): F[AuthResult] =
+        val normalized = normalizeEmail(email)
         for
-          existing <- repo.findByEmail(email)
+          existing <- repo.findByEmail(normalized)
           _        <- existing match
                         case Some(_) => F.raiseError(AuthError.EmailAlreadyExists)
                         case None    => F.unit
           hash     <- hasher.hash(password)
-          user     <- repo.create(email.trim.toLowerCase, hash)
+          user     <- repo.create(normalized, hash)
           token    <- jwt.generate(JwtPayload(user.id, user.email))
         yield AuthResult(user, token)
 
       override def login(email: String, password: String): F[AuthResult] =
+        val normalized = normalizeEmail(email)
         for
-          maybeUser <- repo.findByEmail(email.trim.toLowerCase)
+          maybeUser <- repo.findByEmail(normalized)
           user      <- maybeUser match
                           case Some(value) => F.pure(value)
                           case None        => F.raiseError(AuthError.InvalidCredentials)
@@ -53,5 +55,8 @@ object AuthService {
 
       override def authenticate(token: String): F[Option[JwtPayload]] =
         jwt.verify(token)
+
+      private def normalizeEmail(value: String): String =
+        value.trim.toLowerCase
     }
 }
