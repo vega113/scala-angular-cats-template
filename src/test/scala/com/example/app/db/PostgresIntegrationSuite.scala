@@ -29,14 +29,39 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
           case Some(xa) =>
             val checkTables = for
               selectOne <- sql"select 1".query[Int].unique
-              usersTable <- sql"select to_regclass('public.users')".query[Option[String]].unique
-              todosTable <- sql"select to_regclass('public.todos')".query[Option[String]].unique
+              usersTable <- sql"select to_regclass('app.users')".query[Option[String]].unique
+              todosTable <- sql"select to_regclass('app.todos')".query[Option[String]].unique
             yield {
               assertEquals(selectOne, 1)
-              assertEquals(usersTable, Some("users"))
-              assertEquals(todosTable, Some("todos"))
+              assertEquals(usersTable, Some("app.users"))
+              assertEquals(todosTable, Some("app.todos"))
             }
             checkTables.transact(xa)
+          case None => fail("expected transactor")
+        }
+      yield result
+    }
+  }
+
+  test("UserRepository can create and fetch users") {
+    assume(dockerAvailable, DockerSupport.skipMessage)
+    withPostgres { container =>
+      val cfg = configFromContainer(container)
+      val email = "integration@example.com"
+      val passwordHash = "$2a$10$Z.uq3G6eeiN4sqw2H8t2XePrwL7hIwrKyYVJZZzKzbwQ6vurIWBiK" // precomputed hash
+
+      for
+        _ <- MigrationRunner.migrate(cfg)
+        result <- TransactorBuilder.optional(cfg).use {
+          case Some(xa) =>
+            val repo = com.example.app.auth.UserRepository.doobie[IO](xa)
+            for
+              created <- repo.create(email, passwordHash)
+              fetched <- repo.findByEmail(email)
+            yield {
+              assertEquals(fetched.map(_.id), Some(created.id))
+              assertEquals(fetched.map(_.email), Some(email))
+            }
           case None => fail("expected transactor")
         }
       yield result
