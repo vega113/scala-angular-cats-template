@@ -7,6 +7,9 @@ ThisBuild / scalaVersion := "3.3.4"
 ThisBuild / organization := "com.example"
 ThisBuild / version      := "0.1.0-SNAPSHOT"
 
+// Ensure IOApp runs in a forked JVM to avoid non-main-thread warning when using `sbt run`
+Compile / run / fork := true
+
 lazy val root = (project in file(".")).enablePlugins(JavaAppPackaging)
   .settings(
     name := "scala-angular-cats-template",
@@ -25,7 +28,9 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.flywaydb" % "flyway-core" % "10.12.0"
+  "org.flywaydb" % "flyway-core" % "10.12.0",
+  // Flyway 10+ requires database-specific modules; add PostgreSQL support explicitly
+  "org.flywaydb" % "flyway-database-postgresql" % "10.12.0"
 )
 
 libraryDependencies ++= Seq(
