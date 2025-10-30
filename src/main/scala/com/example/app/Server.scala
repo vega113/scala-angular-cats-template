@@ -7,12 +7,14 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.typelevel.log4cats.slf4j.Slf4jLogger
 import com.example.app.config.*
 import com.example.app.http.Routes
+import com.example.app.http.middleware.{RequestIdMiddleware, LoggingMiddleware, ErrorHandler}
 
 object Server:
   def resource(cfg: AppConfig): Resource[IO, Http4sServer] =
     for
       logger <- Resource.eval(Slf4jLogger.create[IO])
-      app     = new Routes().httpApp
+      baseApp = new Routes().httpApp
+      app     = (RequestIdMiddleware andThen LoggingMiddleware andThen ErrorHandler)(baseApp)
       _      <- Resource.eval(logger.info(s"Starting HTTP server on port ${cfg.http.port}"))
       srv    <- EmberServerBuilder.default[IO]
                   .withHost(ipv4"0.0.0.0")
