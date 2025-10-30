@@ -8,7 +8,7 @@ import io.circe.Json
 import org.http4s.implicits._
 import org.http4s.server.Router
 
-class Routes() {
+class Routes(authRoutes: AuthRoutes) {
   private val ops: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "health" =>
       Ok(Json.obj("status" -> Json.fromString("ok")))
@@ -17,6 +17,7 @@ class Routes() {
   }
 
   val httpApp: HttpApp[IO] = Router(
-    "/" -> ops
+    "/" -> ops,
+    "/api/auth" -> authRoutes.routes
   ).orNotFound
 }

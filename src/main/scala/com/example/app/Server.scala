@@ -8,14 +8,17 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import org.http4s.server.middleware._
 import org.http4s.Uri
 import com.example.app.config.*
-import com.example.app.http.Routes
+import com.example.app.http.{AuthRoutes, Routes}
+import com.example.app.auth.AuthService
 import com.example.app.http.middleware.{RequestIdMiddleware, LoggingMiddleware, ErrorHandler}
 
 object Server:
-  def resource(cfg: AppConfig): Resource[IO, Http4sServer] =
+  def resource(cfg: AppConfig, resources: AppResources): Resource[IO, Http4sServer] =
     for
       logger <- Resource.eval(Slf4jLogger.create[IO])
-      baseApp = new Routes().httpApp
+      authService = AuthService[IO](resources.userRepository, resources.passwordHasher, resources.jwtService)
+      authRoutes  = new AuthRoutes(authService)
+      baseApp = new Routes(authRoutes).httpApp
       corsApp = {
         if (cfg.angular.mode == "dev")
           CORS.policy
