@@ -66,6 +66,8 @@ This plan reflects the design in docs/design.md and decisions in docs/requiremen
 
 ## M3. Persistence & Migrations
 
+_Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and integration tests added.
+
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
 | T-301 | ✅ | Flyway setup + baseline migration files | 1.5h | T-101 |
