@@ -5,9 +5,10 @@ import org.http4s._
 import org.http4s.dsl.io._
 import org.http4s.circe._
 import io.circe.Json
+import org.http4s.implicits._
 
 class Routes() {
-  private val api: HttpRoutes[IO] = HttpRoutes.of[IO] {
+  private val ops: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "health" =>
       Ok(Json.obj("status" -> Json.fromString("ok")))
     case GET -> Root / "ready" =>
@@ -15,6 +16,6 @@ class Routes() {
   }
 
   val httpApp: HttpApp[IO] = Router(
-    "/" -> api
+    "/" -> ops
   ).orNotFound
 }
