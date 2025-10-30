@@ -23,3 +23,8 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" %  "logback-classic" % "1.5.6",
   "net.logstash.logback" % "logstash-logback-encoder" % "7.4"
 )
+
+libraryDependencies ++= Seq(
+  "com.github.pureconfig" %% "pureconfig-core" % "0.17.6",
+  "org.typelevel" %% "cats-effect" % "3.5.4"
+)
