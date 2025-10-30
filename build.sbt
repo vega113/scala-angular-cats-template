@@ -15,3 +15,11 @@ lazy val root = (project in file(".")).enablePlugins(JavaAppPackaging)
       // cats-effect base will be added in later tasks when needed
     )
   )
+
+ThisBuild / resolvers += Resolver.mavenCentral
+
+libraryDependencies ++= Seq(
+  "org.typelevel" %% "log4cats-slf4j" % "2.7.0",
+  "ch.qos.logback" %  "logback-classic" % "1.5.6",
+  "net.logstash.logback" % "logstash-logback-encoder" % "7.4"
+)
