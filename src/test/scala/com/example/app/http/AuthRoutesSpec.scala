@@ -47,14 +47,18 @@ class AuthRoutesSpec extends CatsEffectSuite {
     }
   }
 
-  test("signup rejects duplicate email") {
+  test("signup rejects duplicate email (case-insensitive)") {
     setupRoutes.flatMap { case (routes, _) =>
       val payload = Json.obj("email" -> Json.fromString("dup@example.com"), "password" -> Json.fromString("secret"))
       val request = Request[IO](POST, uri"/signup").withEntity(payload)
+      val second = Request[IO](POST, uri"/signup").withEntity(Json.obj(
+        "email" -> Json.fromString("DUP@EXAMPLE.COM"),
+        "password" -> Json.fromString("secret")
+      ))
 
       for
         _ <- routes.routes.run(request).value
-        respOpt <- routes.routes.run(request).value
+        respOpt <- routes.routes.run(second).value
         response <- IO.fromOption(respOpt)(new RuntimeException("missing response"))
         body <- response.as[Json]
       yield {
