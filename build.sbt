@@ -49,3 +49,10 @@ uiBuild := {
 // Ensure Native Packager stage runs after UI build
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 Universal / stage := (Universal / stage).dependsOn(uiBuild).value
+
+libraryDependencies ++= Seq(
+  "org.http4s" %% "http4s-ember-server" % "0.23.26",
+  "org.http4s" %% "http4s-dsl" % "0.23.26",
+  "org.http4s" %% "http4s-circe" % "0.23.26",
+  "io.circe" %% "circe-generic" % "0.14.9"
+)
