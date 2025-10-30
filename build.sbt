@@ -39,7 +39,8 @@ libraryDependencies ++= Seq(
   "org.tpolecat" %% "doobie-postgres"% "1.0.0-RC5",
   "com.zaxxer"   %  "HikariCP"       % "5.1.0",
   "org.postgresql" % "postgresql"    % "42.7.4",
-  "org.mindrot"    %  "jbcrypt"       % "0.4"
+  "org.mindrot"    %  "jbcrypt"       % "0.4",
+  "com.github.jwt-scala" %% "jwt-circe" % "10.0.1"
 )
 
 // Tests

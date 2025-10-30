@@ -86,7 +86,7 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
 | T-401 | ✅ | Password hashing (bcrypt) + user repo | 2h | T-302, T-305 |
-| T-402 | 🟡 | JWT service (sign/verify), config | 1.5h | T-106 |
+| T-402 | ✅ | JWT service (sign/verify), config | 1.5h | T-106 |
 | T-403 | 🟡 | Auth routes: signup, login, me | 2h | T-401, T-402, T-201 |
 | T-404 | 🟡 | Auth middleware (Bearer → UserCtx) | 1.5h | T-402, T-201 |
 | T-405 | 🟡 | Tests (unit + integration) | 2h | T-401..T-404, T-304 |
