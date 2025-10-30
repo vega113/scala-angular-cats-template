@@ -24,6 +24,12 @@ libraryDependencies ++= Seq(
   "net.logstash.logback" % "logstash-logback-encoder" % "7.4"
 )
 
+// Tests
+libraryDependencies ++= Seq(
+  "org.scalameta" %% "munit" % "0.7.29" % Test,
+  "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
+)
+
 libraryDependencies ++= Seq(
   "com.github.pureconfig" %% "pureconfig-core" % "0.17.6",
   "org.typelevel" %% "cats-effect" % "3.5.4"

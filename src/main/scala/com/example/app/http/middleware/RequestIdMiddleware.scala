@@ -4,6 +4,7 @@ import cats.data.Kleisli
 import cats.effect.IO
 import org.http4s._
 import org.http4s.dsl.io._
+import org.typelevel.ci.CIString
 import java.util.UUID
 
 object RequestIdMiddleware:

@@ -4,8 +4,8 @@ import cats.data.Kleisli
 import cats.effect.IO
 import org.http4s._
 import org.http4s.dsl.io._
-import io.circe.syntax._
 import io.circe.Json
+import org.http4s.circe.CirceEntityEncoder._
 
 object ErrorHandler:
   def apply(app: HttpApp[IO]): HttpApp[IO] = Kleisli { (req: Request[IO]) =>
@@ -16,8 +16,6 @@ object ErrorHandler:
           "message" -> Json.fromString(Option(th.getMessage).getOrElse("unexpected error"))
         )
       )
-      Response[IO](status = Status.InternalServerError)
-        .withEntity(body)
-        .pure[IO]
+      IO.pure(Response[IO](status = Status.InternalServerError).withEntity(body))
     }
   }
