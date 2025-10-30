@@ -42,13 +42,17 @@ object AuthService {
         val normalized = normalizeEmail(email)
         for
           maybeUser <- repo.findByEmail(normalized)
-          user      <- maybeUser match
-                          case Some(value) => F.pure(value)
-                          case None        => F.raiseError(AuthError.InvalidCredentials)
-          valid     <- hasher.verify(password, user.passwordHash)
-          _         <- if valid then F.unit else F.raiseError(AuthError.InvalidCredentials)
-          token     <- jwt.generate(JwtPayload(user.id, user.email))
-        yield AuthResult(user, token)
+          result    <- maybeUser match
+                          case Some(user) =>
+                            hasher.verify(password, user.passwordHash).flatMap { valid =>
+                              if valid then
+                                jwt.generate(JwtPayload(user.id, user.email)).map(AuthResult(user, _))
+                              else
+                                F.raiseError[AuthResult](AuthError.InvalidCredentials)
+                            }
+                          case None =>
+                            PasswordHasher.constantTimeFailure[F](password) *> F.raiseError[AuthResult](AuthError.InvalidCredentials)
+        yield result
 
       override def currentUser(userId: UUID): F[Option[User]] =
         repo.findById(userId)

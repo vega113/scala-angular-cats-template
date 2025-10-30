@@ -86,6 +86,24 @@ class AuthRoutesSpec extends CatsEffectSuite {
     }
   }
 
+  test("login rejects unknown email with generic message") {
+    setupRoutes.flatMap { case (routes, _) =>
+      val loginReq = Request[IO](POST, uri"/login").withEntity(Json.obj(
+        "email" -> "unknown@example.com".asJson,
+        "password" -> "secret".asJson
+      ))
+
+      routes.routes.run(loginReq).value.flatMap {
+        case Some(resp) =>
+          for
+            _ <- IO(assertEquals(resp.status, Status.Unauthorized))
+            json <- resp.as[Json]
+          yield assertEquals(json.hcursor.downField("error").downField("code").as[String], Right("invalid_credentials"))
+        case None => fail("missing response")
+      }
+    }
+  }
+
   test("me returns user info when token valid") {
     setupRoutes.flatMap { case (routes, _) =>
       val email = "me@example.com"
