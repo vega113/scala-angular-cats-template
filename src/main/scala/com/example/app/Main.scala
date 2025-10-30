@@ -2,7 +2,7 @@ package com.example.app
 
 import cats.effect.{IO, IOApp}
 import com.example.app.config.*
-import com.example.app.db.MigrationRunner
+import com.example.app.db.{MigrationRunner, TransactorBuilder}
 
 object Main extends IOApp.Simple:
   def run: IO[Unit] =
@@ -10,5 +10,7 @@ object Main extends IOApp.Simple:
       cfg <- ConfigLoader.load
       _   <- IO.println(s"App config loaded: http=${cfg.http.port}, angular=${cfg.angular.mode}@${cfg.angular.port}")
       _   <- MigrationRunner.migrate(cfg)
-      _   <- Server.resource(cfg).useForever
+      _   <- TransactorBuilder.optional(cfg)
+                .flatMap(_ => Server.resource(cfg))
+                .useForever
     yield ()
