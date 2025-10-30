@@ -71,7 +71,7 @@ This plan reflects the design in docs/design.md and decisions in docs/requiremen
 | T-301 | ✅ | Flyway setup + baseline migration files | 1.5h | T-101 |
 | T-302 | ✅ | Doobie transactor via HikariCP (Resource) | 2h | T-106 |
 | T-303 | ✅ | DATABASE_URL parser (Heroku SSL) | 1h | T-106 |
-| T-304 | 🟡 | TestContainers Postgres fixture | 2h | T-302 |
+| T-304 | 🟢 | TestContainers Postgres fixture | 2h | T-302 |
 | T-305 | 🟡 | Migrations V1: users, todos | 2h | T-301 |
 
 - DoD: App boots, runs migrations; integration test uses TestContainers and passes.
