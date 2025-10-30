@@ -24,6 +24,10 @@ libraryDependencies ++= Seq(
   "net.logstash.logback" % "logstash-logback-encoder" % "7.4"
 )
 
+libraryDependencies ++= Seq(
+  "org.flywaydb" % "flyway-core" % "10.12.0"
+)
+
 // Tests
 libraryDependencies ++= Seq(
   "org.scalameta" %% "munit" % "0.7.29" % Test,
