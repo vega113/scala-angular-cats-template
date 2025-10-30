@@ -43,6 +43,10 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "com.dimafeng" %% "testcontainers-scala-postgresql" % "0.41.4" % Test
+)
+
+libraryDependencies ++= Seq(
   "com.github.pureconfig" %% "pureconfig-core" % "0.17.6",
   "org.typelevel" %% "cats-effect" % "3.5.4"
 )
