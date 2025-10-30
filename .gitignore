@@ -1,0 +1,49 @@
+# --- OS/IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+*.iml
+.vscode/
+
+# --- Scala / SBT ---
+/target/
+/project/target/
+/project/project/
+/.bsp/
+/.metals/
+/.bloop/
+/.ammonite/
+/.scala-build/
+
+# Ivy/Coursier caches (kept global usually, ignore if local writes occur)
+/.ivy2/
+/.cache/
+/.coursier/
+
+# Logs
+logs/
+*.log
+
+# --- Angular / Node ---
+/ui/node_modules/
+/ui/dist/
+/ui/.angular/
+/ui/.eslintcache
+/ui/coverage/
+/ui/.cache/
+/ui/.parcel-cache/
+
+# Env files (keep examples committed separately)
+.env
+.env.*
+!.env.example
+
+# --- Generated static assets (built by Angular prod build) ---
+/src/main/resources/static/
+
+# Misc
+/tmp/
+
+# --- Heroku & staging outputs ---
+/target/universal/stage/
+
