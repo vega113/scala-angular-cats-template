@@ -5,6 +5,7 @@ import com.comcast.ip4s._
 import org.http4s.server.Server as Http4sServer
 import org.http4s.ember.server.EmberServerBuilder
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import org.http4s.server.middleware._
 import com.example.app.config.*
 import com.example.app.http.Routes
 import com.example.app.http.middleware.{RequestIdMiddleware, LoggingMiddleware, ErrorHandler}
@@ -14,7 +15,17 @@ object Server:
     for
       logger <- Resource.eval(Slf4jLogger.create[IO])
       baseApp = new Routes().httpApp
-      app     = (RequestIdMiddleware andThen LoggingMiddleware andThen ErrorHandler)(baseApp)
+      corsApp = {
+        if (cfg.angular.mode == "dev")
+          CORS.policy
+            .withAllowCredentials(false)
+            .withAllowOriginHost(Set(
+              // allow dev UI
+              org.http4s.server.middleware.CORS.Origin.Host(Uri.Scheme.http, ipv4"localhost", Some(Port.fromInt(cfg.angular.port).getOrElse(port"4200")))
+            ))(baseApp)
+        else baseApp
+      }
+      app     = (RequestIdMiddleware andThen LoggingMiddleware andThen ErrorHandler)(corsApp)
       _      <- Resource.eval(logger.info(s"Starting HTTP server on port ${cfg.http.port}"))
       srv    <- EmberServerBuilder.default[IO]
                   .withHost(ipv4"0.0.0.0")
