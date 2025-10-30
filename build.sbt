@@ -28,6 +28,14 @@ libraryDependencies ++= Seq(
   "org.flywaydb" % "flyway-core" % "10.12.0"
 )
 
+libraryDependencies ++= Seq(
+  "org.tpolecat" %% "doobie-core"    % "1.0.0-RC5",
+  "org.tpolecat" %% "doobie-hikari"  % "1.0.0-RC5",
+  "org.tpolecat" %% "doobie-postgres"% "1.0.0-RC5",
+  "com.zaxxer"   %  "HikariCP"       % "5.1.0",
+  "org.postgresql" % "postgresql"    % "42.7.4"
+)
+
 // Tests
 libraryDependencies ++= Seq(
   "org.scalameta" %% "munit" % "0.7.29" % Test,
