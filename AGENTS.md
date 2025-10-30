@@ -23,6 +23,13 @@ This repository may be worked on by multiple agents in parallel. Follow these ru
   - Screenshots or logs where relevant.
 - Mark PRs as draft until tests pass and you’ve self-reviewed.
 
+## Task Status Updates
+- On opening a PR, set the task’s status emoji in `docs/tasks.md` to 🟢 (In progress).
+- When the PR is ready for review, update to 🟣 (Ready for review).
+- After merge to `main`, update the status to ✅ (Done).
+- If blocked by another task or external dependency, set 🔴 (Blocked) and add a short note in the PR.
+- Keep estimates as-is; optionally add actuals in the PR body for retrospective.
+
 ## Reviews & Merges
 - Another agent or the task owner should review before merge.
 - Squash-merge to keep history tidy (unless the owner requests preserving commits).

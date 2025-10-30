@@ -35,14 +35,14 @@ This plan reflects the design in docs/design.md and decisions in docs/requiremen
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-101 | 🟡 | Initialize single SBT project (Scala 3) + native-packager | 2h | — |
-| T-102 | 🟡 | Add Node 22 LTS setup (`.nvmrc`, engines) | 0.5h | — |
-| T-103 | 🟡 | Create Angular workspace in `ui/` | 1.5h | T-102 |
-| T-104 | 🟡 | Dev proxy file `ui/src/proxy.conf.js` (BACKEND_HOST/PORT) | 0.5h | T-103 |
-| T-105 | 🟡 | Logging baseline (logback JSON encoder, log4cats) | 1h | — |
-| T-106 | 🟡 | Configuration scaffold (PureConfig, types, env) | 1h | — |
-| T-107 | 🟡 | SBT `stage` pipeline (build UI then stage backend) | 2h | T-103 |
-| T-108 | 🟡 | AGENTS.md collaboration guide | 1h | — |
+| T-101 | ✅ | Initialize single SBT project (Scala 3) + native-packager | 2h | — |
+| T-102 | ✅ | Add Node 22 LTS setup (`.nvmrc`, engines) | 0.5h | — |
+| T-103 | ✅ | Create Angular workspace in `ui/` | 1.5h | T-102 |
+| T-104 | ✅ | Dev proxy file `ui/src/proxy.conf.js` (BACKEND_HOST/PORT) | 0.5h | T-103 |
+| T-105 | ✅ | Logging baseline (logback JSON encoder, log4cats) | 1h | — |
+| T-106 | ✅ | Configuration scaffold (PureConfig, types, env) | 1h | — |
+| T-107 | ✅ | SBT `stage` pipeline (build UI then stage backend) | 2h | T-103 |
+| T-108 | ✅ | AGENTS.md collaboration guide | 1h | — |
 
 - Description: repo skeleton, tooling, stage flow.
 - DoD: `sbt stage` runs; Angular builds to `src/main/resources/static`; AGENTS.md present; logback outputs JSON.
@@ -54,10 +54,10 @@ This plan reflects the design in docs/design.md and decisions in docs/requiremen
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-201 | 🟡 | http4s server (Ember), routes wiring | 2h | T-101, T-106 |
-| T-202 | 🟡 | Middlewares: request-id, JSON logging, error handler | 2h | T-105 |
-| T-203 | 🟡 | Health/Readiness endpoints | 1h | T-201 |
-| T-204 | 🟡 | CORS (dev-only allow 4200) | 0.5h | T-201 |
+| T-201 | ✅ | http4s server (Ember), routes wiring | 2h | T-101, T-106 |
+| T-202 | ✅ | Middlewares: request-id, JSON logging, error handler | 2h | T-105 |
+| T-203 | ✅ | Health/Readiness endpoints | 1h | T-201 |
+| T-204 | ✅ | CORS (dev-only allow 4200) | 0.5h | T-201 |
 
 - DoD: `sbt run` serves `/health`, `/ready`; logs JSON with requestId; CORS active in dev.
 - Agent Context: src/main/scala/.../Main.scala, HttpRoutes, middleware package.
