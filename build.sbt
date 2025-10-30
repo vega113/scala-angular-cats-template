@@ -28,3 +28,24 @@ libraryDependencies ++= Seq(
   "com.github.pureconfig" %% "pureconfig-core" % "0.17.6",
   "org.typelevel" %% "cats-effect" % "3.5.4"
 )
+
+// UI build task and stage integration
+lazy val uiBuild = taskKey[Unit]("Build Angular UI (prod)")
+
+uiBuild := {
+  val log = streams.value.log
+  val uiDir = baseDirectory.value / "ui"
+  if ((uiDir / "package.json").exists) {
+    def run(cmd: String) = Process(cmd, uiDir).!
+    log.info("[uiBuild] npm ci ...")
+    val c1 = run("npm ci")
+    if (c1 != 0) sys.error(s"npm ci failed: $c1")
+    log.info("[uiBuild] npm run build:prod ...")
+    val c2 = run("npm run build:prod -- --output-path ../src/main/resources/static")
+    if (c2 != 0) sys.error(s"npm run build:prod failed: $c2")
+  } else log.info("[uiBuild] ui/package.json not found; skipping UI build")
+}
+
+// Ensure Native Packager stage runs after UI build
+import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
+Universal / stage := (Universal / stage).dependsOn(uiBuild).value
