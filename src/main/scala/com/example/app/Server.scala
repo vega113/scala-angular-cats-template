@@ -1,0 +1,22 @@
+package com.example.app
+
+import cats.effect._
+import com.comcast.ip4s._
+import org.http4s.server.Server as Http4sServer
+import org.http4s.ember.server.EmberServerBuilder
+import org.typelevel.log4cats.slf4j.Slf4jLogger
+import com.example.app.config.*
+import com.example.app.http.Routes
+
+object Server:
+  def resource(cfg: AppConfig): Resource[IO, Http4sServer] =
+    for
+      logger <- Resource.eval(Slf4jLogger.create[IO])
+      app     = new Routes().httpApp
+      _      <- Resource.eval(logger.info(s"Starting HTTP server on port ${cfg.http.port}"))
+      srv    <- EmberServerBuilder.default[IO]
+                  .withHost(ipv4"0.0.0.0")
+                  .withPort(Port.fromInt(cfg.http.port).getOrElse(port"8080"))
+                  .withHttpApp(app)
+                  .build
+    yield srv

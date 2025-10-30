@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/scala-angular-cats-template.iml" filepath="$PROJECT_DIR$/.idea/scala-angular-cats-template.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.main.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.scala-angular-cats-template-build.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.scala-angular-cats-template-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.test.iml" filepath="$PROJECT_DIR$/.idea/modules/scala-angular-cats-template/scala-angular-cats-template.test.iml" />
     </modules>
   </component>
 </project>

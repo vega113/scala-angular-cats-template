@@ -1,7 +1,6 @@
 package com.example.app
 
-import cats.effect.IOApp
-import cats.effect.IO
+import cats.effect.{IO, IOApp, Resource}
 import com.example.app.config.*
 
 object Main extends IOApp.Simple:
@@ -9,4 +8,5 @@ object Main extends IOApp.Simple:
     for
       cfg <- ConfigLoader.load
       _   <- IO.println(s"App config loaded: http=${cfg.http.port}, angular=${cfg.angular.mode}@${cfg.angular.port}")
+      _   <- Server.resource(cfg).useForever
     yield ()
