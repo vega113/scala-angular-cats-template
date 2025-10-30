@@ -4,6 +4,7 @@ import cats.effect.Sync
 import cats.syntax.all._
 import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 import io.circe.syntax._
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import com.example.app.config.JwtConfig
 import java.util.UUID
@@ -20,7 +21,9 @@ object JwtService {
     config.secret match
       case Some(secret) =>
         val algo = JwtAlgorithm.HS256
-        Sync[F].pure(new JwtService[F] {
+        for {
+          logger <- Slf4jLogger.create[F]
+        } yield new JwtService[F] {
           private val ttlSeconds = config.ttl.toLong
 
           override def generate(payload: JwtPayload): F[String] =
@@ -39,7 +42,8 @@ object JwtService {
             Sync[F].delay(JwtCirce.decode(token, secret, Seq(algo))).flatMap {
               case scala.util.Success(decoded) =>
                 parsePayload(decoded).pure[F]
-              case scala.util.Failure(_) => Sync[F].pure(None)
+              case scala.util.Failure(err) =>
+                logger.warn(err)("Failed to decode JWT token").as(None)
             }
 
           private def parsePayload(claim: JwtClaim): Option[JwtPayload] =
@@ -49,7 +53,7 @@ object JwtService {
               payload <- io.circe.parser.decode[JwtPayload](claim.content).toOption
               _       <- Option.when(payload.userId == uuid)(())
             yield payload
-        })
+        }
       case None => Sync[F].raiseError(new IllegalStateException("JWT secret is not configured"))
 
   private given Encoder[JwtPayload] = new Encoder[JwtPayload] {
