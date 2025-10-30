@@ -23,11 +23,23 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
     assume(dockerAvailable, DockerSupport.skipMessage)
     withPostgres { container =>
       val cfg = configFromContainer(container)
-      TransactorBuilder.optional(cfg).use {
-        case Some(xa) =>
-          sql"select 1".query[Int].unique.transact(xa).map(n => assertEquals(n, 1))
-        case None => fail("expected transactor")
-      }
+      for
+        _ <- MigrationRunner.migrate(cfg)
+        result <- TransactorBuilder.optional(cfg).use {
+          case Some(xa) =>
+            val checkTables = for
+              selectOne <- sql"select 1".query[Int].unique
+              usersTable <- sql"select to_regclass('public.users')".query[Option[String]].unique
+              todosTable <- sql"select to_regclass('public.todos')".query[Option[String]].unique
+            yield {
+              assertEquals(selectOne, 1)
+              assertEquals(usersTable, Some("users"))
+              assertEquals(todosTable, Some("todos"))
+            }
+            checkTables.transact(xa)
+          case None => fail("expected transactor")
+        }
+      yield result
     }
   }
 
