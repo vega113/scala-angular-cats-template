@@ -18,6 +18,7 @@ object MigrationRunner:
               .dataSource(url, cfg.db.user.orNull, cfg.db.password.orNull)
               .locations("classpath:db/migration")
               .baselineOnMigrate(true)
+              .driver("org.postgresql.Driver")
               .defaultSchema(defaultSchema)
               .schemas(defaultSchema)
               .placeholders(Map("app_schema" -> defaultSchema).asJava)
@@ -28,7 +29,9 @@ object MigrationRunner:
             case Right(result) =>
               logger.info(s"Flyway migrations executed: ${result.migrationsExecuted}")
             case Left(err) =>
-              logger.error(err)("Flyway migration failed") *> IO.raiseError(err)
+              val guidance =
+                "Flyway migration failed. Ensure PostgreSQL is running and DATABASE_URL/credentials are set."
+              logger.error(err)(guidance) *> IO.raiseError(err)
           }
         case None =>
           logger.warn("DATABASE_URL not provided; skipping Flyway migrations")
