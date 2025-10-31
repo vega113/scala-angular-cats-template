@@ -47,6 +47,7 @@ ThisBuild / resolvers += Resolver.mavenCentral
 
 lazy val uiBuild = taskKey[Unit]("Build Angular UI assets")
 lazy val startFrontend = taskKey[Unit]("Start Angular dev server when running the backend in dev mode")
+lazy val prepareFrontend = taskKey[Unit]("Prepare Angular front-end for the selected mode before starting the backend")
 
 uiBuild := {
   val log = streams.value.log
@@ -58,29 +59,6 @@ uiBuild := {
   } else if (sys.env.get("SKIP_UI_BUILD").contains("true")) {
     log.info("[uiBuild] SKIP_UI_BUILD=true; skipping UI build")
   } else {
-    def runCommand(label: String, command: String): Unit = {
-      val stdout = new StringBuilder
-      val stderr = new StringBuilder
-      log.info(s"[$label] Executing: $command")
-      val exitCode = Process(command, uiDir).!(ProcessLogger(
-        out => {
-          stdout.append(out).append('\n')
-          log.info(s"[$label][stdout] $out")
-        },
-        err => {
-          stderr.append(err).append('\n')
-          log.error(s"[$label][stderr] $err")
-        }
-      ))
-      if (exitCode != 0) {
-        val summary = s"$label failed with exit code $exitCode"
-        val details = new StringBuilder(summary)
-        if (stdout.nonEmpty) details.append("\nstdout:\n").append(stdout.toString)
-        if (stderr.nonEmpty) details.append("\nstderr:\n").append(stderr.toString)
-        sys.error(details.toString)
-      }
-    }
-
     val angularMode = sys.env.getOrElse("ANGULAR_MODE", "prod")
     val buildCommand = angularMode match {
       case "heroku-local" => FrontendCommands.buildHerokuLocal
@@ -88,9 +66,13 @@ uiBuild := {
       case _              => FrontendCommands.buildDev
     }
 
-    runCommand("npm ci", FrontendCommands.dependencyInstall)
+    if (sys.env.get("SKIP_UI_INSTALL").contains("true")) {
+      log.info("[uiBuild] SKIP_UI_INSTALL=true; skipping npm ci")
+    } else {
+      CommandRunner.run(FrontendCommands.dependencyInstall, "ui-build npm ci", uiDir, log)
+    }
 
-    runCommand(s"Angular build (ANGULAR_MODE=$angularMode)", buildCommand)
+    CommandRunner.run(buildCommand, s"Angular build (ANGULAR_MODE=$angularMode)", uiDir, log)
   }
 }
 
@@ -99,11 +81,20 @@ startFrontend := {
   val angularMode = sys.env.getOrElse("ANGULAR_MODE", "dev")
   if (angularMode == "dev") {
     log.info("Ensuring Angular dev server is running for sbt run...")
-    FrontendRunHook(baseDirectory.value)()
+    FrontendRunHook(baseDirectory.value, log)()
   } else {
     log.info(s"Skipping Angular dev server startup for ANGULAR_MODE=$angularMode")
   }
 }
+
+prepareFrontend := Def.taskDyn {
+  val angularMode = sys.env.getOrElse("ANGULAR_MODE", "dev")
+  if (angularMode == "dev") {
+    startFrontend
+  } else {
+    uiBuild
+  }
+}.value
 
 watchSources ++= {
   val uiSrcDir = baseDirectory.value / "ui" / "src"
@@ -111,8 +102,8 @@ watchSources ++= {
 }
 
 // Ensure dev mode starts the Angular proxy and packaging builds the correct assets
-run := (Compile / run).dependsOn(startFrontend).evaluated
-runMain := (Compile / runMain).dependsOn(startFrontend).evaluated
+run := (Compile / run).dependsOn(prepareFrontend).evaluated
+runMain := (Compile / runMain).dependsOn(prepareFrontend).evaluated
 
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 Universal / stage := (Universal / stage).dependsOn(uiBuild).value

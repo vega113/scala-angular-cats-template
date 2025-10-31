@@ -35,9 +35,11 @@ class Routes(
 
   private val secureTodos: HttpRoutes[IO] = authMiddleware(todoRoutes.authedRoutes)
 
-  val httpApp: HttpApp[IO] = Router(
+  val routes: HttpRoutes[IO] = Router(
     "/" -> ops,
     "/api/auth" -> authRoutes.routes,
     "/api/todos" -> secureTodos
-  ).orNotFound
+  )
+
+  val httpApp: HttpApp[IO] = routes.orNotFound
 }
