@@ -28,8 +28,17 @@ object FrontendRunHook {
       log.info("[ui-dev] Starting Angular dev server via npm...")
       val runProcess = Process(run, uiDir)
       process = Option(runProcess.run(ProcessLogger(
-        out => log.info(s"[ui-dev][stdout] $out"),
-        err => log.error(s"[ui-dev][stderr] $err")
+        out => {
+          val trimmed = out.trim
+          if (trimmed.nonEmpty) log.info(s"[ui-dev][stdout] $trimmed")
+        },
+        err => {
+          val trimmed = err.trim
+          if (trimmed.nonEmpty) {
+            if (trimmed.toLowerCase.startsWith("warning")) log.warn(s"[ui-dev][stderr] $trimmed")
+            else log.info(s"[ui-dev][stderr] $trimmed")
+          }
+        }
       )))
       log.info("[ui-dev] Angular dev server started (http://localhost:4200).")
     } else {

@@ -9,12 +9,21 @@ object CommandRunner {
     log.info(s"[$label] Executing: ${command.mkString(" ")} (cwd=${cwd.getAbsolutePath})")
     val exitCode = Process(command, cwd).!(ProcessLogger(
       out => {
-        stdout.append(out).append('\n')
-        log.info(s"[$label][stdout] $out")
+        if (out.trim.nonEmpty) {
+          stdout.append(out).append('\n')
+          log.info(s"[$label][stdout] $out")
+        }
       },
       err => {
-        stderr.append(err).append('\n')
-        log.error(s"[$label][stderr] $err")
+        if (err.trim.nonEmpty) {
+          stderr.append(err).append('\n')
+          val lower = err.trim.toLowerCase
+          if (lower.startsWith("npm warn") || lower.startsWith("warning")) {
+            log.warn(s"[$label][stderr] $err")
+          } else {
+            log.error(s"[$label][stderr] $err")
+          }
+        }
       }
     ))
     if (exitCode != 0) {
