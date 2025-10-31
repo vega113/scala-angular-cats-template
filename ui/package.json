@@ -5,11 +5,13 @@
   "engines": { "node": ">=22 <23" },
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --open --proxy-config src/proxy.conf.js --host 0.0.0.0",
+    "start": "ng serve --proxy-config src/proxy.conf.js --host 0.0.0.0 --open=false",
     "build": "ng build --configuration development --output-path ../src/main/resources/static",
+    "build:dev": "ng build --configuration development --output-path ../src/main/resources/static",
     "build:prod": "ng build --configuration production --output-path ../src/main/resources/static",
+    "build:heroku-local": "ng build --configuration production --output-path ../src/main/resources/static",
     "lint": "ng lint",
-    "test": "echo 'UI tests not yet configured' && exit 0"
+    "test": "echo 'UI tests are not configured; failing test run.' && exit 1"
   },
   "dependencies": {
     "@angular/animations": "^18.2.0",

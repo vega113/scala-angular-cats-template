@@ -45,23 +45,74 @@ lazy val root = (project in file(".")).enablePlugins(JavaAppPackaging)
 
 ThisBuild / resolvers += Resolver.mavenCentral
 
-// UI build task and stage integration
-lazy val uiBuild = taskKey[Unit]("Build Angular UI (prod)")
+lazy val uiBuild = taskKey[Unit]("Build Angular UI assets")
+lazy val startFrontend = taskKey[Unit]("Start Angular dev server when running the backend in dev mode")
 
 uiBuild := {
   val log = streams.value.log
   val uiDir = baseDirectory.value / "ui"
-  if ((uiDir / "package.json").exists) {
-    def run(cmd: String) = Process(cmd, uiDir).!
-    log.info("[uiBuild] npm ci ...")
-    val c1 = run("npm ci")
-    if (c1 != 0) sys.error(s"npm ci failed: $c1")
-    log.info("[uiBuild] npm run build:prod ...")
-    val c2 = run("npm run build:prod -- --output-path ../src/main/resources/static")
-    if (c2 != 0) sys.error(s"npm run build:prod failed: $c2")
-  } else log.info("[uiBuild] ui/package.json not found; skipping UI build")
+  val packageJson = uiDir / "package.json"
+
+  if (!packageJson.exists()) {
+    log.info("[uiBuild] ui/package.json not found; skipping UI build")
+  } else if (sys.env.get("SKIP_UI_BUILD").contains("true")) {
+    log.info("[uiBuild] SKIP_UI_BUILD=true; skipping UI build")
+  } else {
+    def runCommand(label: String, command: String): Unit = {
+      val stdout = new StringBuilder
+      val stderr = new StringBuilder
+      log.info(s"[$label] Executing: $command")
+      val exitCode = Process(command, uiDir).!(ProcessLogger(
+        out => {
+          stdout.append(out).append('\n')
+          log.info(s"[$label][stdout] $out")
+        },
+        err => {
+          stderr.append(err).append('\n')
+          log.error(s"[$label][stderr] $err")
+        }
+      ))
+      if (exitCode != 0) {
+        val summary = s"$label failed with exit code $exitCode"
+        val details = new StringBuilder(summary)
+        if (stdout.nonEmpty) details.append("\nstdout:\n").append(stdout.toString)
+        if (stderr.nonEmpty) details.append("\nstderr:\n").append(stderr.toString)
+        sys.error(details.toString)
+      }
+    }
+
+    val angularMode = sys.env.getOrElse("ANGULAR_MODE", "prod")
+    val buildCommand = angularMode match {
+      case "heroku-local" => FrontendCommands.buildHerokuLocal
+      case "prod"         => FrontendCommands.buildProd
+      case _              => FrontendCommands.buildDev
+    }
+
+    runCommand("npm ci", FrontendCommands.dependencyInstall)
+
+    runCommand(s"Angular build (ANGULAR_MODE=$angularMode)", buildCommand)
+  }
 }
 
-// Ensure Native Packager stage runs after UI build
+startFrontend := {
+  val log = streams.value.log
+  val angularMode = sys.env.getOrElse("ANGULAR_MODE", "dev")
+  if (angularMode == "dev") {
+    log.info("Ensuring Angular dev server is running for sbt run...")
+    FrontendRunHook(baseDirectory.value)()
+  } else {
+    log.info(s"Skipping Angular dev server startup for ANGULAR_MODE=$angularMode")
+  }
+}
+
+watchSources ++= {
+  val uiSrcDir = baseDirectory.value / "ui" / "src"
+  PathFinder(uiSrcDir).allPaths.get
+}
+
+// Ensure dev mode starts the Angular proxy and packaging builds the correct assets
+run := (Compile / run).dependsOn(startFrontend).evaluated
+runMain := (Compile / runMain).dependsOn(startFrontend).evaluated
+
 import com.typesafe.sbt.packager.universal.UniversalPlugin.autoImport._
 Universal / stage := (Universal / stage).dependsOn(uiBuild).value
