@@ -1,0 +1,21 @@
+<section class="todos-page">
+  <header class="todos-page__header">
+    <div>
+      <h1>My Todos</h1>
+      <p class="todos-page__subtitle">
+        Tasks fetched from the backend will appear here in task T-604.
+      </p>
+    </div>
+    <a routerLink="/todos/new" class="todos-page__create">Create Todo</a>
+  </header>
+
+  <ul class="todos-page__list">
+    <li *ngFor="let item of placeholderItems" class="todos-page__item">
+      <div>
+        <h2>{{ item.title }}</h2>
+        <p>Status: <strong>{{ item.completed ? 'Done' : 'Open' }}</strong></p>
+      </div>
+      <a [routerLink]="['/todos', item.id]" class="todos-page__edit">Edit</a>
+    </li>
+  </ul>
+</section>
