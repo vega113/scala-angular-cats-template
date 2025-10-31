@@ -1,7 +1,6 @@
 package com.example.app.todo
 
-import io.circe.{Encoder, Decoder, Json, ACursor}
-import io.circe.syntax._
+import io.circe.{ACursor, Decoder, Encoder, Json}
 
 sealed trait FieldPatch[+A]
 object FieldPatch {
