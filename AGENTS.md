@@ -46,6 +46,56 @@ This repository may be worked on by multiple agents in parallel. Follow these ru
 - Avoid unrelated changes (formatting, renames) outside your task.
 - Include or update tests where applicable.
 
+### Angular — Modern Style Guide (v20+)
+These rules apply to `ui/**` and any Angular code in this repo. They reflect current Angular guidance (v20+) using standalone APIs, Signals, and modern control flow.
+
+- Project structure
+  - Use standalone components/directives/pipes only. Do not introduce NgModules.
+  - Prefer feature folders and route-driven boundaries. Lazy-load features via `loadComponent`/`loadChildren` in the router config.
+- Bootstrapping and DI
+  - Bootstrap with `bootstrapApplication(AppComponent, { providers: [...] })`.
+  - Use provider functions, not modules: `provideRouter(routes)`, `provideHttpClient(withFetch(), withInterceptors([...]))`, `provideAnimations()` when needed.
+  - Prefer `inject()` for DI inside constructors, functions, and providers. Keep constructors simple.
+  - Scope services using route-level providers where appropriate for better tree-shaking and isolation.
+- Routing
+  - Use the functional router with `provideRouter`. Prefer functional guards/resolvers (e.g., `canActivate: [authGuard]`, `resolve: { data: myResolver }`) implemented as functions using `inject()`.
+  - Use `TitleStrategy` or `withInMemoryScrolling` and other router features via provider options instead of legacy patterns.
+- Templates and control flow
+  - Use the new built-in control flow: `@if`, `@for`, `@switch` instead of `*ngIf/*ngFor/*ngSwitch`.
+  - Use `@defer` blocks for code-splitting and progressive rendering when helpful.
+  - Prefer `track` expressions with `@for` to avoid diffing costs on lists.
+- State management
+  - Prefer Angular Signals for local UI state: `signal`, `computed`, `effect`.
+  - Keep RxJS usage focused in services, data access, and interop. In components, convert streams via `toSignal()`/`toObservable()` as needed.
+  - Avoid `async` pipe for hot UI state when Signals suffice; where Observables are required, keep subscriptions managed by the template or `takeUntilDestroyed()`.
+- Forms
+  - Prefer strongly-typed reactive forms. Keep form state in the component; do not create service singletons just for form state.
+  - Signal-based forms are evolving; adopt only if marked stable in the targeted Angular version and agreed in the task.
+- HttpClient
+  - Use the Fetch adapter with `withFetch()` unless you have a browser/API limitation that requires XHR.
+  - Configure interceptors via `provideHttpClient(withInterceptors([...]))`; prefer small, focused interceptors.
+- Components
+  - Keep components presentational where possible. Push logic to services.
+  - Use `@Input()`/`@Output()` for explicit APIs; for two-way patterns prefer the `@Model()` decorator or `model()` helpers if available in your target version, otherwise emit explicit change events.
+  - Use OnPush-like patterns naturally achieved by Signals; avoid manual `ChangeDetectorRef` unless necessary.
+- Performance & change detection
+  - Prefer pure pipes and computed signals for derived values.
+  - Zoneless change detection is optional and advanced. Only enable via the official provider when explicitly requested and measured.
+- Testing
+  - Test standalone components with `TestBed.configureTestingModule({ imports: [ComponentUnderTest] })` or `render` helpers; avoid TestBed modules.
+  - Prefer harnesses for Angular Material components if used.
+- Tooling
+  - Use the Angular CLI defaults (Vite-based builder). Do not add custom webpack unless justified.
+  - Keep `package.json` scripts aligned with CLI commands (`ng serve`, `ng build`, `ng test`, `ng update`).
+
+### Context7 — Up-to-date Angular references (MANDATORY)
+To ensure changes follow the most current Angular recommendations:
+- Before making non-trivial UI changes, query the latest Angular docs via the Context7 tools provided in this environment.
+  - Resolve library: `resolve-library-id` for “Angular”.
+  - Fetch docs: `get-library-docs` for topics like standalone APIs, Signals, control flow, router, HttpClient, forms, and testing.
+- Cite major decisions in PRs by linking the relevant Angular docs (versioned when possible), and note if a feature is experimental/preview.
+- If guidance changed between versions, prefer the latest stable release behavior. When in doubt, ask in the PR and include the doc excerpt.
+
 ## Tooling & Commands
 - Use `sbt test` for backend tests; `npm --prefix ui test` for frontend tests.
 - Build/stage: `sbt stage` (runs Angular prod build then stages backend).
