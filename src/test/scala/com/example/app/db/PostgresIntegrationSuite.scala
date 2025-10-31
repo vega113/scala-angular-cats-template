@@ -68,6 +68,29 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
     }
   }
 
+  test("AuthService signup/login flow") {
+    assume(dockerAvailable, DockerSupport.skipMessage)
+    withPostgres { container =>
+      val cfg = configFromContainer(container)
+      val repoConfig = cfg
+
+      MigrationRunner.migrate(repoConfig) *> TransactorBuilder
+        .optional(repoConfig)
+        .use {
+          case Some(xa) =>
+            for
+              jwt <- com.example.app.security.jwt.JwtService[IO](repoConfig.jwt.copy(secret = Some("it-secret")))
+              repo = com.example.app.auth.UserRepository.doobie[IO](xa)
+              hasher = com.example.app.security.PasswordHasher.bcrypt[IO]()
+              service = com.example.app.auth.AuthService[IO](repo, hasher, jwt)
+              signup <- service.signup("pguser@example.com", "secret")
+              login  <- service.login("pguser@example.com", "secret")
+            yield assertEquals(login.user.email, signup.user.email)
+          case None => IO.raiseError(new RuntimeException("missing transactor"))
+        }
+    }
+  }
+
   private def withPostgres[A](use: PostgreSQLContainer[?] => IO[A]): IO[A] =
     postgresResource.use(use)
 
