@@ -40,10 +40,21 @@ class TodoModelsSpec extends FunSuite {
     assertEquals(decoded, Right(expected))
   }
 
+  test("TodoUpdate encodes FieldPatch.Clear as null") {
+    val update = TodoUpdate(None, FieldPatch.Clear, FieldPatch.Unchanged, None)
+    val json = update.asJson.noSpaces
+    assertEquals(json, """{"description":null}""")
+  }
+
   test("TodoUpdate leaves missing fields unchanged") {
     val json = "{}"
     val decoded = decode[TodoUpdate](json)
     val expected = TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)
     assertEquals(decoded, Right(expected))
+  }
+
+  test("TodoUpdate encode omits unchanged fields") {
+    val update = TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)
+    assertEquals(update.asJson.noSpaces, "{}")
   }
 }
