@@ -56,13 +56,10 @@ object JwtService {
         }
       case None => Sync[F].raiseError(new IllegalStateException("JWT secret is not configured"))
 
-  private given Encoder[JwtPayload] = new Encoder[JwtPayload] {
-    override def apply(a: JwtPayload): Json =
-      Json.obj(
-        "userId" -> a.userId.toString.asJson,
-        "email"  -> a.email.asJson
-      )
-  }
+  private given Encoder[JwtPayload] = (a: JwtPayload) => Json.obj(
+    "userId" -> a.userId.toString.asJson,
+    "email" -> a.email.asJson
+  )
 
   private given Decoder[JwtPayload] = Decoder.instance { cursor =>
     for
