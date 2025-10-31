@@ -3,9 +3,8 @@ package com.example.app.http.middleware
 import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import com.example.app.auth.AuthService
-import com.example.app.security.jwt.JwtPayload
-import org.http4s.{AuthScheme, Credentials, Request}
-import org.http4s.headers.Authorization
+import com.example.app.http.TokenExtractor
+import org.http4s.Request
 import org.http4s.server.AuthMiddleware
 
 object BearerAuthMiddleware {
@@ -15,22 +14,12 @@ object BearerAuthMiddleware {
     type OptionTIO[A] = OptionT[IO, A]
 
     val authenticate: Kleisli[OptionTIO, Request[IO], AuthUser] = Kleisli { req =>
-      OptionT {
-        extractToken(req).flatMap {
-          case Some(token) =>
-            authService.authenticate(token).map(_.map(p => AuthUser(p.userId, p.email)))
-          case None => IO.pure(None)
-        }
+      OptionT.liftF(IO.pure(TokenExtractor.bearerToken(req))).flatMapF {
+        case Some(token) => authService.authenticate(token).map(_.map(p => AuthUser(p.userId, p.email)))
+        case None        => IO.pure(None)
       }
     }
 
     AuthMiddleware(authenticate)
   }
-
-  private def extractToken(req: Request[IO]): IO[Option[String]] =
-    IO.pure {
-      req.headers.get[Authorization].collect {
-        case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token
-      }
-    }
 }

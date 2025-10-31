@@ -1,22 +1,19 @@
 package com.example.app.http
 
 import cats.effect.IO
-import cats.syntax.all._
 import com.example.app.auth.{AuthError, AuthResult, AuthService, User}
 import com.example.app.security.jwt.JwtPayload
+import io.circe.generic.semiauto.*
+import io.circe.syntax.*
 import io.circe.{Decoder, Encoder, Json}
-import io.circe.generic.semiauto._
-import io.circe.syntax._
-import org.http4s.{AuthScheme, Credentials, EntityDecoder, HttpRoutes, Request, Response, Status}
-import org.http4s.circe._
-import org.http4s.dsl.io._
-import org.http4s.headers.Authorization
+import org.http4s.circe.*
+import org.http4s.dsl.io.*
+import org.http4s.{EntityDecoder, HttpRoutes, Request, Response, Status}
 
 import java.util.UUID
 
 final class AuthRoutes(authService: AuthService[IO]) {
-  import AuthRoutes._
-  import AuthRoutes.given
+  import AuthRoutes.{*, given}
 
   val routes: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case req @ POST -> Root / "signup" =>
@@ -60,11 +57,7 @@ final class AuthRoutes(authService: AuthService[IO]) {
     }
 
   private def extractToken(req: Request[IO]): IO[Option[String]] =
-    IO.pure {
-      req.headers.get[Authorization].collect {
-        case Authorization(Credentials.Token(AuthScheme.Bearer, token)) => token
-      }
-    }
+    IO.pure(TokenExtractor.bearerToken(req))
 
   private def authErrorResponse(err: AuthError): IO[Response[IO]] = err match
     case AuthError.EmailAlreadyExists => jsonResponse(Status.Conflict, errorBody("email_exists", "Email already registered"))
