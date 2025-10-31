@@ -1,0 +1,65 @@
+.todos-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.todos-page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.todos-page__subtitle {
+  margin-top: 0.5rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.todos-page__create {
+  background: linear-gradient(135deg, #22d3ee, #a855f7);
+  color: #0f172a;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 12px 30px rgba(34, 211, 238, 0.3);
+}
+
+.todos-page__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0;
+  margin: 0;
+}
+
+.todos-page__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: 12px;
+  background: rgba(15, 118, 110, 0.2);
+  border: 1px solid rgba(45, 212, 191, 0.4);
+}
+
+.todos-page__item h2 {
+  margin: 0 0 0.5rem 0;
+}
+
+.todos-page__edit {
+  color: #38bdf8;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+@media (max-width: 600px) {
+  .todos-page__item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

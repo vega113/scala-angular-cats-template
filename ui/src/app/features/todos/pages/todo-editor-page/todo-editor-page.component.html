@@ -1,0 +1,21 @@
+<section class="todo-editor">
+  <h1 *ngIf="!(todoId$ | async); else editTitle">Create Todo</h1>
+  <ng-template #editTitle>
+    <h1>Edit Todo</h1>
+  </ng-template>
+
+  <p class="todo-editor__subtitle">
+    This form will connect to the backend in task T-604. For now it acts as a placeholder to validate routing.
+  </p>
+
+  <div class="todo-editor__placeholder">
+    <p>
+      Todo editor form placeholder
+      <span *ngIf="todoId$ | async as todoId">for todo <strong>#{{ todoId }}</strong></span>
+    </p>
+  </div>
+
+  <nav class="todo-editor__actions">
+    <a routerLink="/todos" class="todo-editor__back">Back to list</a>
+  </nav>
+</section>
