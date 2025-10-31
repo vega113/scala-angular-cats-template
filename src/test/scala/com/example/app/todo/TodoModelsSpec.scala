@@ -33,10 +33,17 @@ class TodoModelsSpec extends FunSuite {
     assertEquals(decoded.toOption.map(_.title), Some("New"))
   }
 
-  test("TodoUpdate allows optional fields") {
-    val json = """{"title": "Updated", "completed": true}"""
+  test("TodoUpdate decodes null to clear patch") {
+    val json = """{"description": null}"""
     val decoded = decode[TodoUpdate](json)
-    assertEquals(decoded.toOption.flatMap(_.title), Some("Updated"))
-    assertEquals(decoded.toOption.flatMap(_.completed), Some(true))
+    val expected = TodoUpdate(None, FieldPatch.Clear, FieldPatch.Unchanged, None)
+    assertEquals(decoded, Right(expected))
+  }
+
+  test("TodoUpdate leaves missing fields unchanged") {
+    val json = "{}"
+    val decoded = decode[TodoUpdate](json)
+    val expected = TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)
+    assertEquals(decoded, Right(expected))
   }
 }

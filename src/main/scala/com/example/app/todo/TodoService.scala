@@ -33,7 +33,8 @@ object TodoService {
         repo.get(userId, id)
 
       override def update(userId: UUID, id: UUID, update: TodoUpdate): F[Todo] =
-        repo.update(userId, id, update).flatMap {
+        val sanitized = update.copy(title = update.title.map(_.trim).filter(_.nonEmpty))
+        repo.update(userId, id, sanitized).flatMap {
           case Some(todo) => F.pure(todo)
           case None       => F.raiseError(TodoError.NotFound)
         }

@@ -3,7 +3,7 @@ package com.example.app.db
 import cats.effect.{IO, Resource}
 import com.dimafeng.testcontainers.PostgreSQLContainer
 import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig}
-import com.example.app.todo.{TodoCreate, TodoRepository, TodoUpdate}
+import com.example.app.todo.{FieldPatch, TodoCreate, TodoRepository, TodoUpdate}
 import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
 import java.time.Instant
@@ -26,7 +26,7 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
                 val userId = UUID.randomUUID()
                 for
                   created <- repo.create(userId, TodoCreate("Task", Some("desc"), None))
-                  _       <- repo.update(userId, created.id, TodoUpdate(title = Some("Updated"), description = None, dueDate = None, completed = Some(true)))
+                  _       <- repo.update(userId, created.id, TodoUpdate(title = Some("Updated"), description = FieldPatch.Clear, dueDate = FieldPatch.Unchanged, completed = Some(true)))
                   fetched <- repo.get(userId, created.id)
                   list    <- repo.list(userId, Some(true), limit = 10, offset = 0)
                   deleted <- repo.delete(userId, created.id)

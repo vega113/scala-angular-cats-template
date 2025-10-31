@@ -5,6 +5,7 @@ import cats.syntax.all._
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
+import com.example.app.todo.FieldPatch
 import java.time.Instant
 import java.util.UUID
 
@@ -53,14 +54,14 @@ object TodoRepository {
     override def update(userId: UUID, id: UUID, update: TodoUpdate): F[Option[Todo]] = {
       val setFragments = List(
         update.title.map(t => fr"title = $t"),
-        update.description.map {
-          case Some(desc) => fr"description = $desc"
-          case None       => fr"description = NULL"
-        },
-        update.dueDate.map {
-          case Some(due) => fr"due_date = $due"
-          case None      => fr"due_date = NULL"
-        },
+        update.description match
+          case FieldPatch.Unchanged => None
+          case FieldPatch.Set(desc) => Some(fr"description = $desc")
+          case FieldPatch.Clear     => Some(fr"description = NULL"),
+        update.dueDate match
+          case FieldPatch.Unchanged => None
+          case FieldPatch.Set(due)  => Some(fr"due_date = $due")
+          case FieldPatch.Clear     => Some(fr"due_date = NULL"),
         update.completed.map(flag => fr"completed = $flag"),
         Some(fr"updated_at = CURRENT_TIMESTAMP")
       ).flatten

@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all._
 import munit.CatsEffectSuite
+import com.example.app.todo.FieldPatch
 
 import java.time.Instant
 import java.util.UUID
@@ -30,7 +31,7 @@ class TodoServiceSpec extends CatsEffectSuite:
   test("update returns not found when todo missing") {
     inMemoryRepo.flatMap { case (repo, _) =>
       val service = TodoService[IO](repo)
-      service.update(userId, UUID.randomUUID(), TodoUpdate(None, None, None, None)).attempt.map { res =>
+      service.update(userId, UUID.randomUUID(), TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)).attempt.map { res =>
         assertEquals(res.left.map(_.getClass), Left(classOf[TodoError.NotFound.type]))
       }
     }
@@ -57,8 +58,14 @@ class TodoServiceSpec extends CatsEffectSuite:
           case Some(todo) =>
             val updated = todo.copy(
               title = update.title.getOrElse(todo.title),
-              description = update.description.getOrElse(todo.description),
-              dueDate = update.dueDate.getOrElse(todo.dueDate),
+              description = update.description match
+                case FieldPatch.Unchanged => todo.description
+                case FieldPatch.Set(value) => Some(value)
+                case FieldPatch.Clear => None,
+              dueDate = update.dueDate match
+                case FieldPatch.Unchanged => todo.dueDate
+                case FieldPatch.Set(value) => Some(value)
+                case FieldPatch.Clear => None,
               completed = update.completed.getOrElse(todo.completed),
               updatedAt = Instant.parse("2024-01-01T00:00:00Z")
             )
