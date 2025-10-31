@@ -124,6 +124,10 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 - DoD: UI performs auth+todo flows against dev proxy; prod build lands in backend static folder.
 - Agent Context: ui/src/app/*, ui/src/proxy.conf.js, angular.json, package.json.
+- Implementation Notes:
+  - T-602: build login and signup flows with standalone components, Angular signals, and HttpClient integration against `/api/auth` endpoints; update AuthService accordingly.
+  - T-603: register functional HTTP interceptors (`withInterceptors`) and guards via `canActivateFn`; avoid reintroducing NgModules.
+  - Keep widget build compatibility (Angular Elements) when altering interceptors.
 
 ---
 
