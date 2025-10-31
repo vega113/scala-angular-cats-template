@@ -12,17 +12,21 @@ import com.example.app.auth.AuthService
 import com.example.app.http.{AuthRoutes, Routes, TodoRoutes}
 import com.example.app.http.middleware.{ErrorHandler, LoggingMiddleware, RequestIdMiddleware, BearerAuthMiddleware}
 import com.example.app.todo.TodoService
+import doobie.implicits._
+import org.typelevel.log4cats.Logger
 
 object Server:
   def resource(cfg: AppConfig, resources: AppResources): Resource[IO, Http4sServer] =
     for
       logger <- Resource.eval(Slf4jLogger.create[IO])
+      readinessCheck = sql"select 1".query[Int].unique.transact(resources.transactor).void
+      given Logger[IO] = logger
       authService   = AuthService[IO](resources.userRepository, resources.passwordHasher, resources.jwtService)
       todoService   = TodoService[IO](resources.todoRepository)
       authMiddleware = BearerAuthMiddleware(authService)
       authRoutes    = new AuthRoutes(authService)
-      todoRoutes    = new TodoRoutes(todoService)
-      baseApp       = new Routes(authRoutes, todoRoutes, authMiddleware).httpApp
+      todoRoutes    = new TodoRoutes(todoService, cfg.todo)
+      baseApp       = new Routes(authRoutes, todoRoutes, authMiddleware, readinessCheck).httpApp
       corsApp = {
         if (cfg.angular.mode == "dev")
           CORS.policy

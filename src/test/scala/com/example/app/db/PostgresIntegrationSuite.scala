@@ -2,7 +2,7 @@ package com.example.app.db
 
 import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig}
+import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig, TodoConfig}
 import doobie.implicits._
 import munit.CatsEffectSuite
 import org.testcontainers.DockerClientFactory
@@ -115,7 +115,8 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
         maxPoolSize = 4
       ),
       jwt = JwtConfig(secret = None, ttl = 3600),
-      logging = LoggingConfig(level = "INFO")
+      logging = LoggingConfig(level = "INFO"),
+      todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100)
     )
 
 object DockerSupport:

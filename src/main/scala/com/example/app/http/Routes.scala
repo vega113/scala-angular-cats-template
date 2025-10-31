@@ -1,6 +1,7 @@
 package com.example.app.http
 
 import cats.effect._
+import cats.syntax.all.*
 import io.circe.Json
 import org.http4s._
 import org.http4s.circe._
@@ -13,13 +14,23 @@ import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 class Routes(
     authRoutes: AuthRoutes,
     todoRoutes: TodoRoutes,
-    authMiddleware: AuthMiddleware[IO, AuthUser]
+    authMiddleware: AuthMiddleware[IO, AuthUser],
+    readinessCheck: IO[Unit]
 ) {
   private val ops: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "health" =>
       Ok(Json.obj("status" -> Json.fromString("ok")))
     case GET -> Root / "ready" =>
-      Ok(Json.obj("db" -> Json.fromString("unknown"), "migrations" -> Json.fromString("unknown")))
+      readinessCheck.attempt.flatMap {
+        case Right(_) => Ok(Json.obj("status" -> Json.fromString("ok")))
+        case Left(err) =>
+          val message = Option(err.getMessage).getOrElse(err.getClass.getSimpleName)
+          val body = Json.obj(
+            "status" -> Json.fromString("error"),
+            "message" -> Json.fromString(message)
+          )
+          ServiceUnavailable(body)
+      }
   }
 
   private val secureTodos: HttpRoutes[IO] = authMiddleware(todoRoutes.authedRoutes)
