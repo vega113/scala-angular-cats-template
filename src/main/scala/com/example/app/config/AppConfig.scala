@@ -14,4 +14,12 @@ final case class DbConfig(
 ) derives ConfigReader
 final case class JwtConfig(secret: Option[String], ttl: Int) derives ConfigReader
 final case class LoggingConfig(level: String) derives ConfigReader
-final case class AppConfig(http: HttpConfig, angular: AngularConfig, db: DbConfig, jwt: JwtConfig, logging: LoggingConfig) derives ConfigReader
+final case class TodoConfig(defaultPageSize: Int, maxPageSize: Int) derives ConfigReader
+final case class AppConfig(
+    http: HttpConfig,
+    angular: AngularConfig,
+    db: DbConfig,
+    jwt: JwtConfig,
+    logging: LoggingConfig,
+    todo: TodoConfig
+) derives ConfigReader

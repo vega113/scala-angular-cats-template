@@ -4,6 +4,7 @@ import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all.*
+import com.example.app.config.TodoConfig
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 import com.example.app.todo.{FieldPatch, Todo, TodoCreate, TodoRepository, TodoService, TodoUpdate}
 import com.example.app.todo.TodoModels.given
@@ -19,6 +20,8 @@ import org.http4s.circe.CirceEntityEncoder.given
 import org.http4s.dsl.io.*
 import org.http4s.implicits.*
 import org.http4s.server.{AuthMiddleware, Router}
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.noop.NoOpLogger
 
 import java.time.Instant
 import java.util.UUID
@@ -27,9 +30,11 @@ class TodoRoutesSpec extends CatsEffectSuite:
   private val user = AuthUser(UUID.fromString("00000000-0000-0000-0000-000000000001"), "user@example.com")
   private val baseUri = uri"/api/todos"
   private type OptionTIO[A] = OptionT[IO, A]
+  private given Logger[IO] = NoOpLogger[IO]
+  private val defaultConfig = TodoConfig(defaultPageSize = 20, maxPageSize = 100)
 
   test("create todo returns payload with defaults"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         resp <- app.run(Request[IO](POST, baseUri).withEntity(Json.obj("title" -> "Task".asJson)))
         _ = assertEquals(resp.status, Status.Created)
@@ -40,7 +45,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("list supports completed filter and pagination clamping"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         created1 <- createTodo(app, "One")
         _        <- createTodo(app, "Two")
@@ -56,7 +61,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("update can clear optional fields via null"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         created <- createTodo(app, "With Desc", description = Some("desc"))
         resp    <- updateTodo(app, created.id, Json.obj("description" -> Json.Null))
@@ -66,7 +71,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("toggle flips completion state"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         created  <- createTodo(app, "Toggle me")
         toggled1 <- app.run(Request[IO](PATCH, baseUri / created.id.toString / "toggle"))
@@ -81,7 +86,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("delete removes todo and returns 204"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         created <- createTodo(app, "Delete me")
         deleteResp <- app.run(Request[IO](DELETE, baseUri / created.id.toString))
@@ -91,7 +96,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("create rejects blank titles"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       for
         resp <- app.run(Request[IO](POST, baseUri).withEntity(Json.obj("title" -> "  ".asJson)))
         _ = assertEquals(resp.status, Status.BadRequest)
@@ -100,7 +105,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     }
 
   test("get returns 404 for missing todo"):
-    withApp { (app, _) =>
+    withApp() { (app, _) =>
       val unknownId = UUID.fromString("00000000-0000-0000-0000-000000001234")
       for
         resp <- app.run(Request[IO](GET, baseUri / unknownId.toString))
@@ -109,12 +114,34 @@ class TodoRoutesSpec extends CatsEffectSuite:
       yield assertEquals(errorCode(body), Some("todo_not_found"))
     }
 
-  private def withApp[A](f: (HttpApp[IO], Ref[IO, Map[UUID, Todo]]) => IO[A]): IO[A] =
+  test("unauthorized access is rejected with 401"):
+    val unauth = Kleisli[OptionTIO, Request[IO], AuthUser](_ => OptionT.none[IO, AuthUser])
+    withApp(authenticator = unauth) { (app, _) =>
+      app.run(Request[IO](GET, baseUri)).map(resp => assertEquals(resp.status, Status.Unauthorized))
+    }
+
+  test("list clamps to configured maximum page size"):
+    val cfg = TodoConfig(defaultPageSize = 5, maxPageSize = 8)
+    withApp(todoConfig = cfg) { (app, _) =>
+      for
+        _ <- (1 to 12).toList.traverse_(i => createTodo(app, s"Task $i"))
+        resp <- app.run(Request[IO](GET, uri"/api/todos?limit=50"))
+        _ = assertEquals(resp.status, Status.Ok)
+        todos <- resp.as[List[Todo]]
+      yield assertEquals(todos.length, 8)
+    }
+
+  private val defaultAuthenticator: Kleisli[OptionTIO, Request[IO], AuthUser] =
+    Kleisli(_ => OptionT.pure[IO](user))
+
+  private def withApp[A](
+      todoConfig: TodoConfig = defaultConfig,
+      authenticator: Kleisli[OptionTIO, Request[IO], AuthUser] = defaultAuthenticator
+  )(f: (HttpApp[IO], Ref[IO, Map[UUID, Todo]]) => IO[A]): IO[A] =
     Ref.of[IO, Map[UUID, Todo]](Map.empty).flatMap { ref =>
       val repo       = new InMemoryTodoRepository(ref)
       val service    = TodoService[IO](repo)
-      val routes     = new TodoRoutes(service)
-      val authenticator = Kleisli[OptionTIO, Request[IO], AuthUser](_ => OptionT.pure[IO](user))
+      val routes     = new TodoRoutes(service, todoConfig)
       val middleware = AuthMiddleware(authenticator)
       val app = Router("/api/todos" -> middleware(routes.authedRoutes)).orNotFound
       f(app, ref)

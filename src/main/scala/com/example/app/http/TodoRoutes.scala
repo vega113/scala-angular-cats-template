@@ -2,6 +2,7 @@ package com.example.app.http
 
 import cats.effect.IO
 import cats.syntax.all.*
+import com.example.app.config.TodoConfig
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 import com.example.app.todo.{FieldPatch, TodoCreate, TodoError, TodoModels, TodoService, TodoUpdate}
 import com.example.app.todo.TodoModels.given
@@ -10,10 +11,14 @@ import io.circe.syntax.*
 import org.http4s.*
 import org.http4s.circe.{CirceEntityEncoder, jsonOf}
 import org.http4s.dsl.io.*
+import org.typelevel.log4cats.Logger
 
 import java.util.UUID
 
-final class TodoRoutes(todoService: TodoService[IO]):
+final class TodoRoutes(
+    todoService: TodoService[IO],
+    pagination: TodoConfig
+)(using logger: Logger[IO]):
   import TodoRoutes.{given, *}
   import CirceEntityEncoder.given
 
@@ -22,10 +27,11 @@ final class TodoRoutes(todoService: TodoService[IO]):
       handleCreate(authed, req.req)
 
     case GET -> Root :? CompletedFilter(completed) +& Limit(limit) +& Offset(offset) as authed =>
-      val clampedLimit  = limit.getOrElse(defaultLimit)
-      val clampedOffset = offset.getOrElse(defaultOffset)
+      val requestedLimit  = limit.getOrElse(pagination.defaultPageSize)
+      val sanitizedLimit  = sanitizeLimit(requestedLimit)
+      val sanitizedOffset = sanitizeOffset(offset.getOrElse(defaultOffset))
       todoService
-        .list(authed.userId, completed, sanitizeLimit(clampedLimit), sanitizeOffset(clampedOffset))
+        .list(authed.userId, completed, sanitizedLimit, sanitizedOffset)
         .flatMap(todos => Ok(todos.asJson))
 
     case GET -> Root / UUIDVar(id) as authed =>
@@ -41,16 +47,16 @@ final class TodoRoutes(todoService: TodoService[IO]):
 
     case DELETE -> Root / UUIDVar(id) as authed =>
       todoService.delete(authed.userId, id).attempt.flatMap:
-        case Right(_)                  => NoContent()
-        case Left(TodoError.NotFound)  => NotFound(errorBody("todo_not_found", "Todo not found"))
-        case Left(other)               => InternalServerError(errorBody("todo_delete_failed", other.getMessage))
+        case Right(_)                 => NoContent()
+        case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
+        case Left(other)              => InternalServerError(errorBody("todo_delete_failed", other.getMessage))
 
   private def handleCreate(user: AuthUser, req: Request[IO]): IO[Response[IO]] =
     req.as[TodoCreate].flatMap { body =>
       todoService.create(user.userId, body).attempt.flatMap:
-        case Right(todo)                                => Created(todo.asJson)
-        case Left(err: IllegalArgumentException)        => BadRequest(errorBody("validation_failed", err.getMessage))
-        case Left(other)                                => InternalServerError(errorBody("todo_create_failed", other.getMessage))
+        case Right(todo)                         => Created(todo.asJson)
+        case Left(err: IllegalArgumentException) => BadRequest(errorBody("validation_failed", err.getMessage))
+        case Left(other)                         => InternalServerError(errorBody("todo_create_failed", other.getMessage))
     }
 
   private def handleUpdate(userId: UUID, id: UUID, req: Request[IO]): IO[Response[IO]] =
@@ -60,7 +66,7 @@ final class TodoRoutes(todoService: TodoService[IO]):
         case Left(TodoError.NotFound)      => NotFound(errorBody("todo_not_found", "Todo not found"))
         case Left(err: IllegalArgumentException) =>
           BadRequest(errorBody("validation_failed", err.getMessage))
-        case Left(other)                   =>
+        case Left(other) =>
           InternalServerError(errorBody("todo_update_failed", other.getMessage))
     }
 
@@ -75,20 +81,29 @@ final class TodoRoutes(todoService: TodoService[IO]):
           completed = Some(desired)
         )
         todoService.update(userId, id, patch).attempt.flatMap:
-          case Right(todo)              => Ok(todo.asJson)
-          case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
-          case Left(other)              => InternalServerError(errorBody("todo_toggle_failed", other.getMessage))
+          case Right(todo) =>
+            logger.info(s"Toggled todo ${todo.id} for user $userId to ${todo.completed}") *>
+              Ok(todo.asJson)
+          case Left(TodoError.NotFound) =>
+            logger.warn(s"Toggle failed for todo $id and user $userId: not found") *>
+              NotFound(errorBody("todo_not_found", "Todo not found"))
+          case Left(other) =>
+            logger.error(other)(s"Toggle failed for todo $id and user $userId") *>
+              InternalServerError(errorBody("todo_toggle_failed", other.getMessage))
       case None =>
-        NotFound(errorBody("todo_not_found", "Todo not found"))
+        logger.warn(s"Toggle requested for missing todo $id and user $userId") *>
+          NotFound(errorBody("todo_not_found", "Todo not found"))
+
+  private def sanitizeLimit(raw: Int): Int =
+    math.max(1, math.min(raw, pagination.maxPageSize))
+
+  private def sanitizeOffset(raw: Int): Int =
+    math.max(0, raw)
 
 object TodoRoutes:
   import com.example.app.todo.TodoModels.given
 
-  private val defaultLimit  = 20
   private val defaultOffset = 0
-
-  private def sanitizeLimit(raw: Int): Int  = math.max(1, math.min(raw, 100))
-  private def sanitizeOffset(raw: Int): Int = math.max(0, raw)
 
   given EntityDecoder[IO, TodoCreate] = jsonOf[IO, TodoCreate]
   given EntityDecoder[IO, TodoUpdate] = jsonOf[IO, TodoUpdate]
