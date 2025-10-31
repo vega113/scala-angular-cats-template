@@ -100,7 +100,7 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-501 | 🟡 | Domain + Circe codecs | 1h | T-201 |
+| T-501 | 🟢 | Domain + Circe codecs | 1h | T-201 |
 | T-502 | 🟡 | Repo (Doobie) with pagination, filters | 2.5h | T-302, T-305 |
 | T-503 | 🟡 | Service validation (per-user ownership) | 1.5h | T-404, T-502 |
 | T-504 | 🟡 | Routes: CRUD + toggle | 2h | T-503 |
