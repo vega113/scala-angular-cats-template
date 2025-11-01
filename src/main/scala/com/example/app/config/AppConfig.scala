@@ -26,7 +26,9 @@ final case class EmailConfig(
   provider: String = "logging",
   fromAddress: Option[String] = None,
   apiKey: Option[String] = None,
-  resetSubject: String = "Reset your password"
+  resetSubject: String = "Reset your password",
+  activationSubject: String = "Activate your account",
+  activationUrlBase: String = "http://localhost:4200/auth/activate"
 ) derives ConfigReader
 final case class TracingConfig(enabled: Boolean) derives ConfigReader
 final case class TodoConfig(defaultPageSize: Int, maxPageSize: Int) derives ConfigReader

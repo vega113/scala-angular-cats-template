@@ -244,7 +244,7 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 | T-1302 | ✅ | Design: Todo Auth Fullflow | 1.5h | T-1301 |
 | T-1303 | 🟣 | Backend: password reset service | 6h | T-1302 |
 | T-1304 | 🟣 | Backend: email service abstraction | 4h | T-1303 |
-| T-1305 | 🟡 | Frontend: auth flows | 6h | T-1304 |
+| T-1305 | 🟣 | Frontend: auth flows | 6h | T-1304 |
 | T-1306 | 🟡 | Frontend: todo UI enhancements | 5h | T-1305 |
 | T-1307 | 🟡 | Tooling & docs updates | 3h | T-1303 |
 | T-1308 | 🟡 | Integration + QA | 2h | T-1306, T-1307 |

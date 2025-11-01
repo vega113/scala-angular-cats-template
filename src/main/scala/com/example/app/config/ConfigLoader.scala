@@ -36,6 +36,10 @@ object ConfigLoader:
     val emailFromAddress = sys.env.get("EMAIL_FROM_ADDRESS").map(_.trim).filter(_.nonEmpty)
     val emailApiKey = sys.env.get("EMAIL_API_KEY").map(_.trim).filter(_.nonEmpty)
     val emailResetSubject = sys.env.get("EMAIL_RESET_SUBJECT").map(_.trim).filter(_.nonEmpty)
+    val emailActivationSubject =
+      sys.env.get("EMAIL_ACTIVATION_SUBJECT").map(_.trim).filter(_.nonEmpty)
+    val emailActivationUrlBase =
+      sys.env.get("EMAIL_ACTIVATION_URL_BASE").map(_.trim).filter(_.nonEmpty)
 
     val updatedAngular = cfg.angular.copy(
       mode = angularMode.getOrElse(cfg.angular.mode),
@@ -50,7 +54,9 @@ object ConfigLoader:
       provider = emailProvider.getOrElse(cfg.email.provider),
       fromAddress = emailFromAddress.orElse(cfg.email.fromAddress),
       apiKey = emailApiKey.orElse(cfg.email.apiKey),
-      resetSubject = emailResetSubject.getOrElse(cfg.email.resetSubject)
+      resetSubject = emailResetSubject.getOrElse(cfg.email.resetSubject),
+      activationSubject = emailActivationSubject.getOrElse(cfg.email.activationSubject),
+      activationUrlBase = emailActivationUrlBase.getOrElse(cfg.email.activationUrlBase)
     )
 
     val updatedPasswordReset = cfg.passwordReset.copy(

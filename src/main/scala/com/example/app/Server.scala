@@ -36,7 +36,9 @@ object Server:
       authService = AuthService[IO](
         resources.userRepository,
         resources.passwordHasher,
-        resources.jwtService
+        resources.jwtService,
+        emailService,
+        cfg.email
       )
       passwordResetService = PasswordResetService[IO](
         PasswordResetService.Dependencies(

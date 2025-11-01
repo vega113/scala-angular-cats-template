@@ -7,11 +7,17 @@ import org.typelevel.log4cats.Logger
 
 trait EmailService[F[_]] {
   def sendPasswordReset(to: String, subject: String, resetUrl: String, token: String): F[Unit]
+  def sendActivationLink(to: String, subject: String, activationUrl: String): F[Unit]
 }
 
 object EmailService {
-  def logging[F[_]: Sync: Logger]: EmailService[F] =
-    (to, subject, resetUrl, token) =>
+  def logging[F[_]: Sync: Logger]: EmailService[F] = new EmailService[F] {
+    override def sendPasswordReset(
+      to: String,
+      subject: String,
+      resetUrl: String,
+      token: String
+    ): F[Unit] =
       Logger[F].info(
         s"""Sending password reset email
            | To: $to
@@ -21,15 +27,47 @@ object EmailService {
            |""".stripMargin
       )
 
+    override def sendActivationLink(
+      to: String,
+      subject: String,
+      activationUrl: String
+    ): F[Unit] =
+      Logger[F].info(
+        s"""Sending account activation email
+           | To: $to
+           | Subject: $subject
+           | Activation URL: $activationUrl
+           |""".stripMargin
+      )
+  }
+
   /** Placeholder external provider that logs a warning if invoked without configuration. */
-  def external[F[_]: Sync: Logger](config: EmailConfig): EmailService[F] =
-    (to, subject, resetUrl, _) =>
+  def external[F[_]: Sync: Logger](config: EmailConfig): EmailService[F] = new EmailService[F] {
+    override def sendPasswordReset(
+      to: String,
+      subject: String,
+      resetUrl: String,
+      token: String
+    ): F[Unit] =
       Logger[F].warn(
         s"""Email provider '${config.provider}' not yet implemented.
            | Fallback: no email sent to $to with subject '$subject' and reset url $resetUrl.
            | Configure a supported provider to enable delivery.
            |""".stripMargin
       )
+
+    override def sendActivationLink(
+      to: String,
+      subject: String,
+      activationUrl: String
+    ): F[Unit] =
+      Logger[F].warn(
+        s"""Email provider '${config.provider}' not yet implemented.
+           | Fallback: no email sent to $to with subject '$subject' and activation url $activationUrl.
+           | Configure a supported provider to enable delivery.
+           |""".stripMargin
+      )
+  }
 
   def fromConfig[F[_]: Sync: Logger](config: EmailConfig): EmailService[F] =
     config.provider.toLowerCase match

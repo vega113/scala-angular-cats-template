@@ -1,12 +1,19 @@
 <div class="app-shell">
   <header class="app-shell__header">
     <div class="app-shell__brand">
-      <a routerLink="/" class="app-shell__title">Scala + Angular Template</a>
+      <a routerLink="/todos" class="app-shell__title">Scala + Angular Template</a>
     </div>
     <nav class="app-shell__nav">
       <a routerLink="/todos" routerLinkActive="active">Todos</a>
-      <a routerLink="/auth/login" routerLinkActive="active">Login</a>
-      <a routerLink="/auth/signup" routerLinkActive="active">Sign Up</a>
+      @if (isAuthenticated()) {
+        <button type="button" class="app-shell__logout" (click)="logout()">
+          Logout
+        </button>
+        <span class="app-shell__user">{{ user()?.email }}</span>
+      } @else {
+        <a routerLink="/auth/login" routerLinkActive="active">Login</a>
+        <a routerLink="/auth/signup" routerLinkActive="active">Sign Up</a>
+      }
     </nav>
   </header>
 

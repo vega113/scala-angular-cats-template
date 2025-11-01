@@ -4,7 +4,8 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.implicits._
 import com.example.app.auth.{AuthService, PasswordResetService, User, UserRepository}
-import com.example.app.config.JwtConfig
+import com.example.app.config.{EmailConfig, JwtConfig}
+import com.example.app.email.EmailService
 import com.example.app.security.PasswordHasher
 import com.example.app.security.jwt.{JwtPayload, JwtService}
 import munit.CatsEffectSuite
@@ -22,12 +23,24 @@ class AuthRoutesSpec extends CatsEffectSuite {
   private val passwordHasher = PasswordHasher.bcrypt[IO]()
   private val jwtService =
     JwtService[IO](JwtConfig(secret = Some("test-secret"), ttl = 3600)).unsafeRunSync()
+  private val emailConfig = EmailConfig()
+  private val noopEmailService = new EmailService[IO] {
+    override def sendPasswordReset(
+      to: String,
+      subject: String,
+      resetUrl: String,
+      token: String
+    ): IO[Unit] = IO.unit
+
+    override def sendActivationLink(to: String, subject: String, activationUrl: String): IO[Unit] =
+      IO.unit
+  }
 
   private def setupRoutes(passwordReset: PasswordResetService[IO] = stubPasswordResetService()): IO[(AuthRoutes, InMemoryUserRepo)] =
     for
       ref <- Ref.of[IO, Map[UUID, User]](Map.empty)
       repo = new InMemoryUserRepo(ref)
-      service = AuthService[IO](repo, passwordHasher, jwtService)
+      service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
     yield (new AuthRoutes(service, passwordReset), repo)
 
   test("signup returns token and user") {

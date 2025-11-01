@@ -19,9 +19,12 @@ import munit.CatsEffectSuite
 import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import scala.concurrent.duration._
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.noop.NoOpLogger
 
 class PostgresIntegrationSuite extends CatsEffectSuite:
   private val dockerAvailable: Boolean = DockerSupport.isAvailable
+  private given Logger[IO] = NoOpLogger[IO]
 
   test("MigrationRunner migrates successfully against container") {
     assume(dockerAvailable, DockerSupport.skipMessage)
@@ -96,7 +99,8 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
                 .JwtService[IO](repoConfig.jwt.copy(secret = Some("it-secret")))
               repo = com.example.app.auth.UserRepository.doobie[IO](xa)
               hasher = com.example.app.security.PasswordHasher.bcrypt[IO]()
-              service = com.example.app.auth.AuthService[IO](repo, hasher, jwt)
+              emailService = com.example.app.email.EmailService.fromConfig[IO](repoConfig.email)
+              service = com.example.app.auth.AuthService[IO](repo, hasher, jwt, emailService, repoConfig.email)
               signup <- service.signup("pguser@example.com", "secret")
               login <- service.login("pguser@example.com", "secret")
             yield assertEquals(login.user.email, signup.user.email)
@@ -134,7 +138,9 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
         provider = "logging",
         fromAddress = Some("no-reply@example.com"),
         apiKey = None,
-        resetSubject = "Reset your password"
+        resetSubject = "Reset your password",
+        activationSubject = "Activate your account",
+        activationUrlBase = "http://localhost:4200/auth/activate"
       ),
       tracing = TracingConfig(enabled = false),
       todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100),

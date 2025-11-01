@@ -1,28 +1,27 @@
 import { ChangeDetectionStrategy, Component, Signal, computed, inject, signal } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
-  selector: 'app-signup-page',
-  templateUrl: './signup-page.component.html',
-  styleUrls: ['./signup-page.component.scss'],
+  selector: 'app-password-reset-request-page',
+  templateUrl: './password-reset-request-page.component.html',
+  styleUrls: ['./password-reset-request-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SignupPageComponent {
+export class PasswordResetRequestPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    passwordConfirm: ['', [Validators.required]],
   });
 
+  private readonly successSignal = signal<boolean>(false);
   private readonly errorSignal = signal<string | null>(null);
+
+  readonly success = computed(() => this.successSignal());
   readonly errorMessage = computed(() => this.errorSignal());
   readonly loading = this.authService.loading;
 
@@ -32,17 +31,11 @@ export class SignupPageComponent {
       return;
     }
 
-    const { password, passwordConfirm } = this.form.getRawValue();
-    if (password !== passwordConfirm) {
-      this.errorSignal.set('Passwords must match.');
-      return;
-    }
-
     this.errorSignal.set(null);
-    const { email } = this.form.getRawValue();
+    this.successSignal.set(false);
 
-    this.authService.signup({ email, password }).subscribe({
-      next: () => this.router.navigate(['/todos']),
+    this.authService.requestPasswordReset(this.form.getRawValue()).subscribe({
+      next: () => this.successSignal.set(true),
       error: (error: unknown) => this.errorSignal.set(extractErrorMessage(error)),
     });
   }
@@ -52,5 +45,5 @@ function extractErrorMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse && error.error?.error?.message) {
     return error.error.error.message;
   }
-  return 'Unable to create account. Please try again.';
+  return 'Unable to process password reset request. Please try again later.';
 }

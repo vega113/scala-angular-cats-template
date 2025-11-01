@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Signal, computed, inject, signal } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-login-page',
@@ -6,4 +11,37 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
   styleUrls: ['./login-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LoginPageComponent {}
+export class LoginPageComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
+  readonly form = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required]],
+  });
+
+  private readonly errorSignal = signal<string | null>(null);
+  readonly errorMessage = computed(() => this.errorSignal());
+  readonly loading = this.authService.loading;
+
+  submit(): void {
+    if (this.form.invalid || this.loading()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    this.errorSignal.set(null);
+    this.authService.login(this.form.getRawValue()).subscribe({
+      next: () => this.router.navigate(['/todos']),
+      error: (error: unknown) => this.errorSignal.set(extractErrorMessage(error)),
+    });
+  }
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof HttpErrorResponse && error.error?.error?.message) {
+    return error.error.error.message;
+  }
+  return 'Unable to log in. Please check your credentials and try again.';
+}

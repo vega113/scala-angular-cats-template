@@ -2,6 +2,8 @@ package com.example.app.auth
 
 import cats.effect.Sync
 import cats.syntax.all._
+import com.example.app.config.EmailConfig
+import com.example.app.email.EmailService
 import com.example.app.security.PasswordHasher
 import com.example.app.security.jwt.{JwtPayload, JwtService}
 import java.util.UUID
@@ -25,7 +27,9 @@ object AuthService {
   def apply[F[_]: Sync](
     repo: UserRepository[F],
     hasher: PasswordHasher[F],
-    jwt: JwtService[F]
+    jwt: JwtService[F],
+    emailService: EmailService[F],
+    emailConfig: EmailConfig
   ): AuthService[F] =
     new AuthService[F] {
       private val F = Sync[F]
@@ -39,6 +43,11 @@ object AuthService {
             case None => F.unit
           hash <- hasher.hash(password)
           user <- repo.create(normalized, hash)
+          activationToken <- F.delay(UUID.randomUUID().toString.replaceAll("-", ""))
+          activationUrl = buildActivationUrl(emailConfig.activationUrlBase, activationToken, normalized)
+          _ <- emailService
+            .sendActivationLink(normalized, emailConfig.activationSubject, activationUrl)
+            .handleErrorWith(_ => F.unit)
           token <- jwt.generate(JwtPayload(user.id, user.email))
         yield AuthResult(user, token)
 
@@ -66,5 +75,12 @@ object AuthService {
 
       private def normalizeEmail(value: String): String =
         value.trim.toLowerCase
+
+      private def buildActivationUrl(base: String, token: String, email: String): String =
+        val separator = if base.contains('?') then "&" else "?"
+        s"$base${separator}token=$token&email=${urlEncode(email)}"
+
+      private def urlEncode(value: String): String =
+        java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8)
     }
 }

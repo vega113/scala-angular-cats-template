@@ -207,5 +207,11 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
       token: String
     ): IO[Unit] =
       ref.update(entries => (to, subject, resetUrl, token) :: entries)
+
+    override def sendActivationLink(
+      to: String,
+      subject: String,
+      activationUrl: String
+    ): IO[Unit] = IO.unit
   }
 }

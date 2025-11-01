@@ -33,8 +33,8 @@ export class TodoApiService {
 
   list(): Observable<TodoListResponse> {
     return this.http
-      .get<TodoListDto>(this.baseUrl)
-      .pipe(map((response) => mapTodoList(response)));
+      .get<TodoListDto | TodoDto[]>(this.baseUrl)
+      .pipe(map(mapTodoListResponse));
   }
 
   get(id: string): Observable<Todo> {
@@ -76,7 +76,16 @@ function mapTodo(dto: TodoDto): Todo {
   };
 }
 
-function mapTodoList(dto: TodoListDto): TodoListResponse {
+function mapTodoListResponse(dto: TodoListDto | TodoDto[]): TodoListResponse {
+  if (Array.isArray(dto)) {
+    return {
+      items: dto.map(mapTodo),
+      total: dto.length,
+      limit: dto.length,
+      offset: 0,
+    };
+  }
+
   return {
     items: dto.items.map(mapTodo),
     total: dto.total,

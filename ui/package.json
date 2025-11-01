@@ -11,7 +11,7 @@
     "build:prod": "ng build --configuration production --output-path ../src/main/resources/static",
     "build:heroku-local": "ng build --configuration production --output-path ../src/main/resources/static",
     "lint": "ng lint",
-    "test": "echo 'UI tests are not configured; failing test run.' && exit 1"
+    "test": "ng test --watch=false --browsers=ChromeHeadlessCI"
   },
   "dependencies": {
     "@angular/animations": "^18.2.0",
@@ -37,7 +37,14 @@
     "@angular/compiler-cli": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
+    "@types/jasmine": "~5.1.0",
     "eslint": "^8.57.0",
+    "jasmine-core": "^5.1.2",
+    "karma": "^6.4.3",
+    "karma-chrome-launcher": "^3.2.0",
+    "karma-coverage": "^2.2.1",
+    "karma-jasmine": "^5.1.0",
+    "karma-jasmine-html-reporter": "^2.1.0",
     "typescript": "~5.5.4"
   }
 }

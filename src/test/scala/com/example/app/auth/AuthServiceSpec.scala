@@ -3,6 +3,8 @@ package com.example.app.auth
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all._
+import com.example.app.config.EmailConfig
+import com.example.app.email.EmailService
 import com.example.app.security.PasswordHasher
 import com.example.app.security.jwt.{JwtPayload, JwtService}
 import munit.CatsEffectSuite
@@ -13,6 +15,19 @@ import java.util.UUID
 class AuthServiceSpec extends CatsEffectSuite:
   private val passwordHasher = PasswordHasher.bcrypt[IO]()
   private val staticToken = "static-token"
+  private val emailConfig = EmailConfig()
+
+  private val noopEmailService = new EmailService[IO] {
+    override def sendPasswordReset(
+      to: String,
+      subject: String,
+      resetUrl: String,
+      token: String
+    ): IO[Unit] = IO.unit
+
+    override def sendActivationLink(to: String, subject: String, activationUrl: String): IO[Unit] =
+      IO.unit
+  }
 
   private val jwtService = new JwtService[IO]:
     override def generate(payload: JwtPayload): IO[String] = IO.pure(staticToken)
@@ -27,7 +42,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("signup stores normalized email and returns token") {
     inMemoryRepo.flatMap { case (repo, ref) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
       for
         result <- service.signup("User@Example.com ", "secret")
         stored <- ref.get
@@ -41,7 +56,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("signup rejects duplicate email") {
     inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
       val program = for
         _ <- service.signup("duplicate@example.com", "secret")
         _ <- service.signup("duplicate@example.com", "secret")
@@ -55,7 +70,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("login rejects unknown email") {
     inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
       service.login("missing@example.com", "secret").attempt.map { res =>
         assertEquals(res.left.map(_.getClass), Left(classOf[AuthError.InvalidCredentials.type]))
       }
@@ -64,7 +79,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("login succeeds with correct credentials") {
     inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
       for
         signup <- service.signup("login@example.com", "secret")
         login <- service.login("login@example.com", "secret")
