@@ -61,6 +61,12 @@ object Server:
   private def shouldServeSpa(req: Request[IO]): Boolean =
     req.method == Method.GET &&
       !req.uri.path.segments.headOption.exists(_.decoded().equalsIgnoreCase("api")) &&
-      req.headers
-        .get[Accept]
-        .exists(_.values.exists(_.mediaRange.satisfiedBy(MediaType.text.html)))
+      acceptsHtmlOrMissing(req)
+
+  private def acceptsHtmlOrMissing(req: Request[IO]): Boolean =
+    req.headers
+      .get[Accept]
+      .map(_.values.exists { media =>
+        media.mediaRange.satisfiedBy(MediaType.text.html) || media.mediaRange.isWildcard
+      })
+      .getOrElse(true)

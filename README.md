@@ -60,6 +60,7 @@ Environment variables (see docs/requirements.md for full list):
 ## Testing
 - Backend unit/integration: `sbt test`
 - Frontend unit (if configured): `npm --prefix ui test`
+- End-to-end smoke (requires API running locally): `scripts/smoke.sh`
 
 ## Deployment (Heroku)
 - Buildpacks: `heroku/nodejs` then `heroku/java`

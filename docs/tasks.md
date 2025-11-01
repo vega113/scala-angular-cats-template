@@ -140,11 +140,14 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-701 | 🟡 | Static assets serving + SPA fallback | 1h | T-201, T-606 |
-| T-702 | 🟡 | E2E smoke script (curl-based) | 0.5h | T-404, T-504, T-701 |
+| T-701 | ✅ | Static assets serving + SPA fallback | 1h | T-201, T-606 |
+| T-702 | ✅ | E2E smoke script (curl-based) | 0.5h | T-404, T-504, T-701 |
 
 - DoD: Frontend assets served by backend in prod; smoke passes (signup → login → CRUD → delete).
-- Agent Context: http4s static routes, script under scripts/smoke.sh.
+- Agent Context: http4s static routes, `scripts/smoke.sh` smoke script.
+- Notes:
+  - T-701: `Server.scala` serves resources under `static/` and falls back to `index.html` for non-API GETs, even when request `Accept` is missing.
+  - T-702: `scripts/smoke.sh` drives auth + todos CRUD via curl, defaulting to `http://localhost:8080`.
 
 ---
 
