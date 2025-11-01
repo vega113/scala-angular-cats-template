@@ -22,21 +22,25 @@ Functional Scala 3 backend + Angular 18 frontend, set up as a single SBT project
 - Docker (for TestContainers parity locally optional)
 
 ## Quickstart (Dev)
-- Backend:
-  - `sbt run` (serves on `http://localhost:8080` by default)
-- Frontend (dev server with proxy):
-  - `export BACKEND_HOST=localhost BACKEND_PORT=8080`
-  - `npm --prefix ui install`
-  - `npm --prefix ui start` (serves on `http://localhost:4200`)
+- One-command workflow (backend + Angular dev proxy):
+  - `ANGULAR_MODE=dev sbt run`
+    - Starts the Scala API on `http://localhost:8080`
+    - Boots the Angular dev server on `http://localhost:4200` with the proxy already configured
+- Manual alternative:
+  - Backend: `sbt run`
+  - Frontend: `npm --prefix ui install && npm --prefix ui start`
+    - Ensure `BACKEND_HOST=localhost BACKEND_PORT=8080`
 
 Health and readiness:
 - `GET http://localhost:8080/health`
 - `GET http://localhost:8080/ready`
 
 ## Build & Run (Prod-like)
-- Build Angular and stage backend:
-  - `sbt stage` (should run Angular prod build then stage backend)
-- Run staged app:
+- Build Angular assets & run backend with a single command:
+  - `ANGULAR_MODE=prod sbt run`
+    - Runs `npm ci` + `npm run build:prod` (output to `src/main/resources/static`) before starting the API
+- Build and stage for deployment:
+  - `sbt stage`
   - `target/universal/stage/bin/<app> -Dhttp.port=8080`
 
 Alternatively, if using assembly:
@@ -78,4 +82,3 @@ Environment variables (see docs/requirements.md for full list):
 
 ## Contributing
 - See `AGENTS.md` for branching, PRs, and conflict resolution.
-

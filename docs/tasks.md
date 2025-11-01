@@ -118,9 +118,9 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 | T-601 | ✅ | Angular scaffold + routing | 2h | T-103 |
 | T-602 | 🟡 | Auth pages (login/signup) + service | 3h | T-601 |
 | T-603 | ✅ | JWT interceptor + guard | 1h | T-601 |
-| T-604 | 🟡 | Todos pages (list/form) + service | 4h | T-601 |
-| T-605 | 🟡 | Dev proxy verification | 0.5h | T-104, T-201 |
-| T-606 | 🟡 | Build to static resources (prod) | 0.5h | T-107 |
+| T-604 | ✅ | Todos pages (list/form) + service | 4h | T-601 |
+| T-605 | ✅ | Dev proxy verification | 0.5h | T-104, T-201 |
+| T-606 | ✅ | Build to static resources (prod) | 0.5h | T-107 |
 | T-607 | 🟢 | SBT run starts Angular dev server + prod static serving | 1h | T-104, T-201 |
 
 - DoD: UI performs auth+todo flows against dev proxy; prod build lands in backend static folder.
@@ -129,6 +129,9 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
   - T-602: build login and signup flows with standalone components, Angular signals, and HttpClient integration against `/api/auth` endpoints; update AuthService accordingly.
   - T-603: register functional HTTP interceptors (`withInterceptors`) and guards via `canActivateFn`; avoid reintroducing NgModules.
   - Keep widget build compatibility (Angular Elements) when altering interceptors.
+  - T-604: standalone components + signals for todos list/editor, `TodoApiService` bridging to backend CRUD.
+  - T-605: confirm `ANGULAR_MODE=dev sbt run` launches Angular dev proxy; README documents workflow.
+  - T-606: `ANGULAR_MODE=prod sbt run`/`sbt stage` build UI into `src/main/resources/static` for backend serving.
   - T-607: ensure `sbt run`/`runMain` boots the Angular dev proxy when `ANGULAR_MODE=dev`, build assets otherwise, and serve the SPA via backend static routes for non-dev modes.
 
 ---

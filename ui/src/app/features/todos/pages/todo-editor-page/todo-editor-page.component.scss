@@ -2,10 +2,18 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  padding: 2rem;
+  border-radius: 12px;
   background: rgba(30, 64, 175, 0.18);
   border: 1px solid rgba(96, 165, 250, 0.35);
-  border-radius: 12px;
-  padding: 2rem;
+}
+
+.todo-editor__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .todo-editor__subtitle {
@@ -13,21 +21,120 @@
   color: rgba(226, 232, 240, 0.85);
 }
 
-.todo-editor__placeholder {
-  padding: 2rem 1.5rem;
+.todo-editor__back {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.5rem 1.25rem;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.todo-editor__form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.todo-editor__form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+.todo-editor__form input,
+.todo-editor__form textarea {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.4);
   border-radius: 10px;
-  background: rgba(30, 64, 175, 0.35);
-  border: 1px dashed rgba(96, 165, 250, 0.5);
-  text-align: center;
+  padding: 0.75rem 1rem;
+  color: #f8fafc;
+  font-size: 1rem;
+  transition: border-color 0.15s ease;
+}
+
+.todo-editor__form input:focus,
+.todo-editor__form textarea:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, 0.7);
+}
+
+.todo-editor__form input.has-error {
+  border-color: rgba(248, 113, 113, 0.7);
+}
+
+.error {
+  color: rgba(248, 113, 113, 0.85);
+  font-size: 0.85rem;
+}
+
+.checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+}
+
+.checkbox input {
+  width: auto;
+  accent-color: #22d3ee;
 }
 
 .todo-editor__actions {
   display: flex;
+  gap: 1rem;
   justify-content: flex-end;
 }
 
-.todo-editor__back {
-  color: #38bdf8;
-  text-decoration: none;
+.todo-editor__actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.todo-editor__actions button[type='submit'] {
+  background: linear-gradient(135deg, #22d3ee, #a855f7);
+  color: #0f172a;
+}
+
+.todo-editor__actions .ghost {
+  background: rgba(148, 163, 184, 0.2);
+  color: #e2e8f0;
+}
+
+.todo-editor__loading,
+.todo-editor__alert {
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.todo-editor__alert--error {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(185, 28, 28, 0.22);
+}
+
+.todo-editor__alert--success {
+  border-color: rgba(45, 212, 191, 0.45);
+  background: rgba(16, 185, 129, 0.2);
+}
+
+@media (max-width: 600px) {
+  .todo-editor {
+    padding: 1.5rem;
+  }
+
+  .todo-editor__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .todo-editor__actions button {
+    width: 100%;
+  }
 }

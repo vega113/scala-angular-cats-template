@@ -3,19 +3,58 @@
     <div>
       <h1>My Todos</h1>
       <p class="todos-page__subtitle">
-        Tasks fetched from the backend will appear here in task T-604.
+        Manage your tasks and keep track of progress. Data is loaded from the backend API.
       </p>
     </div>
-    <a routerLink="/todos/new" class="todos-page__create">Create Todo</a>
+    <button type="button" class="todos-page__create" (click)="createTodo()">
+      Create Todo
+    </button>
   </header>
 
-  <ul class="todos-page__list">
-    <li *ngFor="let item of placeholderItems" class="todos-page__item">
-      <div>
-        <h2>{{ item.title }}</h2>
-        <p>Status: <strong>{{ item.completed ? 'Done' : 'Open' }}</strong></p>
+  @if (hasError()) {
+    <div class="todos-page__alert todos-page__alert--error">
+      {{ errorMessage() }}
+      <button type="button" (click)="refresh()">Retry</button>
+    </div>
+  }
+
+  @if (loading() && refreshing()) {
+    <div class="todos-page__loading">Loading todos …</div>
+  } @else {
+    @if (!hasTodos()) {
+      <div class="todos-page__empty">
+        <p>No todos yet. Create your first task to get started.</p>
+        <button type="button" (click)="createTodo()">Create Todo</button>
       </div>
-      <a [routerLink]="['/todos', item.id]" class="todos-page__edit">Edit</a>
-    </li>
-  </ul>
+    } @else {
+      <ul class="todos-page__list">
+        @for (item of todos(); track item.id) {
+          <li class="todos-page__item">
+            <div class="todos-page__itemContent">
+              <h2 [class.todos-page__itemTitle--done]="item.completed">
+                {{ item.title }}
+              </h2>
+              @if (item.description) {
+                <p class="todos-page__description">{{ item.description }}</p>
+              }
+              <p class="todos-page__meta">
+                Status:
+                <strong>{{ item.completed ? 'Done' : 'Open' }}</strong>
+                @if (item.dueDate) {
+                  <span> · Due {{ item.dueDate | date: 'mediumDate' }}</span>
+                }
+              </p>
+            </div>
+            <div class="todos-page__actions">
+              <button type="button" (click)="toggleCompletion(item)">
+                Mark {{ item.completed ? 'Open' : 'Done' }}
+              </button>
+              <button type="button" (click)="editTodo(item)">Edit</button>
+              <button type="button" class="danger" (click)="deleteTodo(item)">Delete</button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
 </section>

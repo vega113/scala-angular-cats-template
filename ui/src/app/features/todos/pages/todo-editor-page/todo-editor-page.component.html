@@ -1,21 +1,72 @@
 <section class="todo-editor">
-  <h1 *ngIf="!(todoId$ | async); else editTitle">Create Todo</h1>
-  <ng-template #editTitle>
-    <h1>Edit Todo</h1>
-  </ng-template>
+  <header class="todo-editor__header">
+    <div>
+      <h1>{{ pageTitle() }}</h1>
+      <p class="todo-editor__subtitle">
+        {{ isEditMode() ? 'Update the fields below to edit your task.' : 'Fill out the form to create a new task.' }}
+      </p>
+    </div>
+    <button type="button" class="todo-editor__back" (click)="cancel()">
+      Back to list
+    </button>
+  </header>
 
-  <p class="todo-editor__subtitle">
-    This form will connect to the backend in task T-604. For now it acts as a placeholder to validate routing.
-  </p>
+  @if (loading()) {
+    <div class="todo-editor__loading">Loading todo …</div>
+  } @else {
+    @if (errorMessage()) {
+      <div class="todo-editor__alert todo-editor__alert--error">
+        {{ errorMessage() }}
+      </div>
+    }
 
-  <div class="todo-editor__placeholder">
-    <p>
-      Todo editor form placeholder
-      <span *ngIf="todoId$ | async as todoId">for todo <strong>#{{ todoId }}</strong></span>
-    </p>
-  </div>
+    @if (successMessage()) {
+      <div class="todo-editor__alert todo-editor__alert--success">
+        {{ successMessage() }}
+      </div>
+    }
 
-  <nav class="todo-editor__actions">
-    <a routerLink="/todos" class="todo-editor__back">Back to list</a>
-  </nav>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="todo-editor__form">
+      <label>
+        <span>Title</span>
+        <input
+          type="text"
+          formControlName="title"
+          placeholder="e.g. Review pull requests"
+          [class.has-error]="form.controls.title.invalid && form.controls.title.touched"
+        />
+        @if (form.controls.title.invalid && form.controls.title.touched) {
+          <small class="error">Title is required.</small>
+        }
+      </label>
+
+      <label>
+        <span>Description</span>
+        <textarea
+          formControlName="description"
+          rows="4"
+          placeholder="Add more details if needed"
+        ></textarea>
+      </label>
+
+      <label>
+        <span>Due Date</span>
+        <input type="date" formControlName="dueDate" />
+      </label>
+
+      @if (isEditMode()) {
+        <label class="checkbox">
+          <input type="checkbox" formControlName="completed" />
+          <span>Mark as completed</span>
+        </label>
+      }
+
+      <div class="todo-editor__actions">
+        <button type="submit" [disabled]="submitting()">
+          {{ isEditMode() ? 'Save Changes' : 'Create Todo' }}
+        </button>
+        <button type="button" (click)="cancel()" class="ghost">Cancel</button>
+      </div>
+    </form>
+  }
 </section>
