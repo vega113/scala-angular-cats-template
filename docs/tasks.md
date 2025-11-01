@@ -241,8 +241,9 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
 | T-1301 | 🟢 | Requirements: Todo Auth Fullflow | 1h | M4–M7, M11 review |
+| T-1302 | 🟢 | Design: Todo Auth Fullflow | 1.5h | T-1301 |
 
-- Feature docs: [requirements](features/todo-auth-fullflow/requirements.md) · design (pending) · tasks (pending)
+- Feature docs: [requirements](features/todo-auth-fullflow/requirements.md) · [design](features/todo-auth-fullflow/design.md) · tasks (pending)
 
 ---
 
