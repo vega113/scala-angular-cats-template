@@ -11,6 +11,12 @@
     </button>
   </header>
 
+  @if (flashMessage()) {
+    <div class="todos-page__alert todos-page__alert--success">
+      {{ flashMessage() }}
+    </div>
+  }
+
   @if (hasError()) {
     <div class="todos-page__alert todos-page__alert--error">
       {{ errorMessage() }}

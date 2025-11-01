@@ -65,6 +65,31 @@
   border-color: rgba(248, 113, 113, 0.7);
 }
 
+.todo-editor__dateField {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.todo-editor__dateField input {
+  flex: 1;
+}
+
+.todo-editor__dateField button {
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.todo-editor__dateField button:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(15, 23, 42, 0.75);
+}
+
 .error {
   color: rgba(248, 113, 113, 0.85);
   font-size: 0.85rem;

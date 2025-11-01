@@ -113,13 +113,11 @@ export class TodoEditorPageComponent {
       .pipe(finalize(() => this.submitting.set(false)), takeUntilDestroyed())
       .subscribe({
         next: (result) => {
-          this.successMessage.set(
-            todo ? 'Todo updated successfully.' : 'Todo created successfully.',
-          );
           if (!todo) {
             this.currentTodo.set(result);
-            this.router.navigate(['/todos', result.id], { replaceUrl: true });
+            this.router.navigate(['/todos'], { replaceUrl: true });
           } else {
+            this.successMessage.set('Todo updated successfully.');
             this.currentTodo.set(result);
             this.form.patchValue({
               title: result.title ?? '',
@@ -138,6 +136,16 @@ export class TodoEditorPageComponent {
 
   cancel(): void {
     this.router.navigate(['/todos']);
+  }
+
+  openDatePicker(input: HTMLInputElement): void {
+    const picker = input as HTMLInputElement & { showPicker?: () => void };
+    if (typeof picker.showPicker === 'function') {
+      picker.showPicker();
+    } else {
+      input.focus();
+      input.click();
+    }
   }
 }
 

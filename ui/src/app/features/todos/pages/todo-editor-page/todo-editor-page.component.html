@@ -49,9 +49,12 @@
         ></textarea>
       </label>
 
-      <label>
+      <label class="todo-editor__date">
         <span>Due Date</span>
-        <input type="date" formControlName="dueDate" />
+        <div class="todo-editor__dateField">
+          <input #dueDateInput type="date" formControlName="dueDate" />
+          <button type="button" (click)="openDatePicker(dueDateInput)">Pick a date</button>
+        </div>
       </label>
 
       @if (isEditMode()) {

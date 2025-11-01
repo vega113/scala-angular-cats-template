@@ -118,6 +118,12 @@
   background: rgba(185, 28, 28, 0.2);
 }
 
+.todos-page__alert--success {
+  border-color: rgba(45, 212, 191, 0.45);
+  background: rgba(16, 185, 129, 0.25);
+  color: #d1fae5;
+}
+
 .todos-page__alert button {
   border: 0;
   background: rgba(56, 189, 248, 0.2);

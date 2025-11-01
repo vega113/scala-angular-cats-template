@@ -19,13 +19,26 @@ export class TodoListPageComponent {
   readonly loading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
   readonly todos = signal<Todo[]>([]);
+  private readonly flashSignal = signal<string | null>(null);
   readonly refreshing = computed(
     () => this.loading() && !this.todos().length && !this.errorMessage(),
   );
   readonly hasTodos = computed(() => this.todos().length > 0);
   readonly hasError = computed(() => this.errorMessage() !== null);
+  readonly flashMessage = computed(() => this.flashSignal());
 
   constructor() {
+    const navigation = this.router.getCurrentNavigation();
+    const createdTodoId = navigation?.extras?.state?.['createdTodoId'];
+    if (createdTodoId) {
+      this.flashSignal.set('Todo created successfully.');
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        const currentState = (window.history.state ?? {}) as Record<string, unknown>;
+        const nextState = { ...currentState };
+        delete nextState.createdTodoId;
+        window.history.replaceState(nextState, document.title);
+      }
+    }
     this.refresh();
   }
 
