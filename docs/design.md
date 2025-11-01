@@ -7,6 +7,12 @@
 - Build/Deploy: Node 22 LTS for UI, sbt-native-packager `stage` builds UI then stages backend; deploy to Heroku; Postgres as DB.
 - Static assets: Angular prod build emitted to `src/main/resources/static` and served by backend in prod.
 
+## Related Documents
+- [Requirements](requirements.md) — functional scope, env expectations, and tooling overview.
+- [Technical Decisions](tech.md) — rationale for logging, timeouts, rate limiting, and other platform choices.
+- [Runbook](runbook.md) — operational procedures (restarts, config tuning, smoke tests).
+- [Tasks & Milestones](tasks.md) — current execution plan and status per milestone.
+
 ## Components
 - Backend
   - HTTP API (http4s): routes under `/api`, middlewares (CORS in dev, request-id, request/response logging, error handling).
@@ -127,7 +133,7 @@ AngularDevServer --> Dev: Render UI
 
 ## Configuration Summary
 - Ports: backend `8080`, Angular dev `4200`.
-- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `LOG_LEVEL`, `TRACING_ENABLED`.
+- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `LOG_LEVEL`, `TRACING_ENABLED` (see [Configuration & Environments](requirements.md#configuration--environments) for defaults and [Timeouts & Pool Sizing](tech.md#timeouts--pool-sizing) for tuning guidance).
 
 ## Directory Structure (high level)
 - Root SBT project: `build.sbt`, `project/`.

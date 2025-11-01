@@ -3,6 +3,12 @@
 ## Purpose
 This document records key technical choices for the template, with rationale and implications for implementation and operations.
 
+## Related Documents
+- [Requirements](requirements.md) — functional scope and build expectations those decisions support.
+- [Design](design.md) — system architecture and component structure consuming these decisions.
+- [Runbook](runbook.md) — operational steps influenced by logging, timeouts, and pool sizing outlined here.
+- [Tasks](tasks.md) — tracks delivery of the work items tied to each decision (e.g., T-1101..T-1104).
+
 ## DB Access: Doobie vs Skunk
 
 ### Selection Summary

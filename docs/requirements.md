@@ -7,6 +7,12 @@
 - Support smooth local DX (Angular dev server with proxy to backend) and production build that serves compiled Angular assets from the backend.
 - Deploy to Heroku with PostgreSQL add-on, proper configuration, health/readiness endpoints, and a working `sbt stage` pipeline for Scala 3.
 
+## Related Documents
+- [Design](design.md) — component breakdown, data flow, and integration diagrams.
+- [Technical Decisions](tech.md) — chosen libraries, timeout defaults, and operational trade-offs.
+- [Runbook](runbook.md) — on-call flows, restart procedures, configuration tuning steps.
+- [Tasks](tasks.md) — delivery status and milestone planning.
+
 ## Scope
 - In-scope: SBT project, backend service, Angular app, proxy-based dev setup, static asset serving in prod, DB schema/migrations, Docker/Heroku deployment scaffolding, logging/tracing, configuration, testing scaffold, basic authentication, and CI-ready scripts.
 - Out-of-scope (v1): advanced observability stack (metrics exporters), multi-tenancy, feature toggles, and comprehensive UI/UX styling beyond the TODO example.

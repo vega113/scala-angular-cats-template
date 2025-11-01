@@ -2,6 +2,12 @@
 
 This runbook covers the operational tasks needed to keep the Scala + Angular template running in production (e.g., on Heroku). It assumes you have access to the application logs, the production Postgres database, and the deployment platform.
 
+## Related Documents
+- [Requirements](requirements.md) — baseline environment assumptions and supported ops workflows.
+- [Design](design.md) — service architecture and data flow referenced when diagnosing incidents.
+- [Technical Decisions](tech.md) — logging, timeout, and pooling defaults that influence remediation steps.
+- [Tasks](tasks.md) — milestone status; check before/after incidents for pending work that might impact operations.
+
 ## 1. Quick Reference
 - **Primary endpoints:** API on `HTTP_PORT` (default 8080); health checks at `/health` and `/ready`.
 - **Front-end:** Served by the backend in prod (`ANGULAR_MODE=prod`); Angular dev server runs only in local dev (`ANGULAR_MODE=dev`).
