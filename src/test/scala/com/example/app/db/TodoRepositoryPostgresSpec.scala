@@ -2,7 +2,7 @@ package com.example.app.db
 
 import cats.effect.{IO, Resource}
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig, TodoConfig}
+import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig, TodoConfig, TracingConfig}
 import com.example.app.todo.{FieldPatch, TodoCreate, TodoRepository, TodoUpdate}
 import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
@@ -64,6 +64,7 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       ),
       jwt = JwtConfig(secret = Some("integration"), ttl = 3600),
       logging = LoggingConfig(level = "INFO"),
+      tracing = TracingConfig(enabled = false),
       todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100)
     )
 }

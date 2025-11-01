@@ -18,10 +18,21 @@ object ConfigLoader:
         case s if s.nonEmpty => s.toIntOption
         case _               => None
       )
+    val tracingEnabled = sys.env
+      .get("TRACING_ENABLED")
+      .flatMap(_.trim.toLowerCase match
+        case "true"  => Some(true)
+        case "false" => Some(false)
+        case _        => None
+      )
 
     val updatedAngular = cfg.angular.copy(
       mode = angularMode.getOrElse(cfg.angular.mode),
       port = angularPort.getOrElse(cfg.angular.port)
     )
 
-    cfg.copy(angular = updatedAngular)
+    val updatedTracing = cfg.tracing.copy(
+      enabled = tracingEnabled.getOrElse(cfg.tracing.enabled)
+    )
+
+    cfg.copy(angular = updatedAngular, tracing = updatedTracing)

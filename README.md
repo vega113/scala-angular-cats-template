@@ -62,6 +62,11 @@ Environment variables (see docs/requirements.md for full list):
 - Frontend unit (if configured): `npm --prefix ui test`
 - End-to-end smoke (requires API running locally): `scripts/smoke.sh`
 
+## Logging & Tracing
+- Logs are JSON (Logstash encoder) with per-request `requestId`, optional `userId`, and latency metrics.
+- Enable verbose logging by adjusting `LOG_LEVEL`; request ids propagate via `X-Request-Id` header.
+- Optional tracing scaffold (`natchez`) is disabled by default; set `TRACING_ENABLED=true` and swap the entrypoint in `com.example.app.tracing.Tracing` when wiring Jaeger/OTLP/etc.
+
 ## Deployment (Heroku)
 - Buildpacks: `heroku/nodejs` then `heroku/java`
 - `sbt stage` is invoked during slug build; Procfile runs staged binary:

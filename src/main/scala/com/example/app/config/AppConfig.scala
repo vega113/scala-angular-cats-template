@@ -14,6 +14,7 @@ final case class DbConfig(
 ) derives ConfigReader
 final case class JwtConfig(secret: Option[String], ttl: Int) derives ConfigReader
 final case class LoggingConfig(level: String) derives ConfigReader
+final case class TracingConfig(enabled: Boolean) derives ConfigReader
 final case class TodoConfig(defaultPageSize: Int, maxPageSize: Int) derives ConfigReader
 final case class AppConfig(
     http: HttpConfig,
@@ -21,5 +22,6 @@ final case class AppConfig(
     db: DbConfig,
     jwt: JwtConfig,
     logging: LoggingConfig,
+    tracing: TracingConfig,
     todo: TodoConfig
 ) derives ConfigReader

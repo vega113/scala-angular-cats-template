@@ -11,6 +11,7 @@ import io.circe.syntax.*
 import org.http4s.*
 import org.http4s.circe.{CirceEntityEncoder, jsonOf}
 import org.http4s.dsl.io.*
+import org.typelevel.ci.CIString
 import org.typelevel.log4cats.Logger
 
 import java.util.UUID
@@ -24,32 +25,38 @@ final class TodoRoutes(
 
   val authedRoutes: AuthedRoutes[AuthUser, IO] = AuthedRoutes.of:
     case req @ POST -> Root as authed =>
-      handleCreate(authed, req.req)
+      respond(authed)(handleCreate(authed, req.req))
 
     case GET -> Root :? CompletedFilter(completed) +& Limit(limit) +& Offset(offset) as authed =>
       val requestedLimit  = limit.getOrElse(pagination.defaultPageSize)
       val sanitizedLimit  = sanitizeLimit(requestedLimit)
       val sanitizedOffset = sanitizeOffset(offset.getOrElse(defaultOffset))
-      todoService
-        .list(authed.userId, completed, sanitizedLimit, sanitizedOffset)
-        .flatMap(todos => Ok(todos.asJson))
+      respond(authed) {
+        todoService
+          .list(authed.userId, completed, sanitizedLimit, sanitizedOffset)
+          .flatMap(todos => Ok(todos.asJson))
+      }
 
     case GET -> Root / UUIDVar(id) as authed =>
-      todoService.get(authed.userId, id).flatMap:
-        case Some(todo) => Ok(todo.asJson)
-        case None       => NotFound(errorBody("todo_not_found", "Todo not found"))
+      respond(authed) {
+        todoService.get(authed.userId, id).flatMap:
+          case Some(todo) => Ok(todo.asJson)
+          case None       => NotFound(errorBody("todo_not_found", "Todo not found"))
+      }
 
     case req @ PUT -> Root / UUIDVar(id) as authed =>
-      handleUpdate(authed.userId, id, req.req)
+      respond(authed)(handleUpdate(authed.userId, id, req.req))
 
     case PATCH -> Root / UUIDVar(id) / "toggle" as authed =>
-      toggleTodo(authed.userId, id)
+      respond(authed)(toggleTodo(authed.userId, id))
 
     case DELETE -> Root / UUIDVar(id) as authed =>
-      todoService.delete(authed.userId, id).attempt.flatMap:
-        case Right(_)                 => NoContent()
-        case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
-        case Left(other)              => InternalServerError(errorBody("todo_delete_failed", other.getMessage))
+      respond(authed) {
+        todoService.delete(authed.userId, id).attempt.flatMap:
+          case Right(_)                 => NoContent()
+          case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
+          case Left(other)              => InternalServerError(errorBody("todo_delete_failed", other.getMessage))
+      }
 
   private def handleCreate(user: AuthUser, req: Request[IO]): IO[Response[IO]] =
     req.as[TodoCreate].flatMap { body =>
@@ -99,6 +106,11 @@ final class TodoRoutes(
 
   private def sanitizeOffset(raw: Int): Int =
     math.max(0, raw)
+
+  private val userIdHeader = CIString("X-User-Id")
+
+  private def respond[A](user: AuthUser)(response: IO[Response[IO]]): IO[Response[IO]] =
+    response.map(_.putHeaders(Header.Raw(userIdHeader, user.userId.toString)))
 
 object TodoRoutes:
   import com.example.app.todo.TodoModels.given

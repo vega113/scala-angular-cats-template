@@ -59,9 +59,15 @@ For a template emphasizing pragmatic FP with rich ecosystem support and Heroku-f
 - Decision: Use Node 22 LTS.
 - Rationale: Current LTS with long runway; Angular 18 supports Node 18/20/22. Heroku and local dev environments support Node 22. We’ll pin engines to `^22` while allowing `>=20` in CI if needed.
 
-## Logging Format
-- Decision: JSON logs by default in all environments (readable single-line JSON). Dev can optionally enable a human-friendly pattern.
-- Stack: log4cats API, SLF4J/Logback backend with JSON encoder; include `level`, `timestamp`, `logger`, `message`, `requestId`, and optional `traceId`/`spanId` (natchez-ready).
+## Logging & Tracing
+- Decision: JSON logs by default in all environments (single-line logstash encoder). Requests carry `requestId` + optional `userId` via headers/MDC.
+- Implementation:
+  - `RequestIdMiddleware` ensures every request/response has `X-Request-Id`.
+  - `LoggingMiddleware` emits structured start/finish events with `method`, `path`, `status`, `requestId`, `userId`, and latency (ms).
+  - `ErrorHandler` logs uncaught failures with structured context, redacts response body to a generic message, and includes the reference id (`requestId`).
+  - `TODO` endpoints add `X-User-Id` headers so logs capture the authenticated subject without re-verifying JWTs.
+- Stack: log4cats (Slf4j) + Logback `LogstashEncoder`; MDC/structured fields flow into JSON automatically. Docs updated in README (Testing section) for smoke script usage.
+- Tracing scaffold: optional natchez `EntryPoint` wiring (`TracingMiddleware`) is disabled by default but provides a ready hook for Jaeger/OTLP/etc. Toggle via `TRACING_ENABLED=true` and swap the entry point implementation when integrating with a collector.
 
 ## TestContainers
 - Decision: Include TestContainers for Postgres integration tests.

@@ -28,7 +28,9 @@ lazy val runtimeDependencies = Seq(
   "org.http4s" %% "http4s-ember-server" % "0.23.26",
   "org.http4s" %% "http4s-dsl" % "0.23.26",
   "org.http4s" %% "http4s-circe" % "0.23.26",
-  "io.circe" %% "circe-generic" % "0.14.9"
+  "io.circe" %% "circe-generic" % "0.14.9",
+  "org.tpolecat" %% "natchez-core" % "0.3.2",
+  "org.tpolecat" %% "natchez-noop" % "0.3.2"
 )
 
 lazy val testDependencies = Seq(

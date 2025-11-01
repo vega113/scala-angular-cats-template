@@ -155,13 +155,18 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-801 | 🟡 | JSON logging fields + requestId propagation | 1h | T-202 |
-| T-802 | 🟡 | Structured error logs + redaction policy | 1h | T-202, T-503 |
-| T-803 | 🟡 | Heroku log drain/filters guidance (docs) | 0.5h | T-701 |
-| T-804 | 🟡 | Optional natchez scaffolding (off by default) | 1.5h | T-201 |
+| T-801 | ✅ | JSON logging fields + requestId propagation | 1h | T-202 |
+| T-802 | ✅ | Structured error logs + redaction policy | 1h | T-202, T-503 |
+| T-803 | ✅ | Heroku log drain/filters guidance (docs) | 0.5h | T-701 |
+| T-804 | ✅ | Optional natchez scaffolding (off by default) | 1.5h | T-201 |
 
 - DoD: Logs include requestId/userId; docs explain reading logs and enabling tracing later.
-- Agent Context: logback.json/pattern config, middleware, docs/ops.md.
+- Agent Context: logback config, `LoggingMiddleware`, `ErrorHandler`, `TracingMiddleware`, docs/tech.md.
+- Notes:
+  - T-801: Logging middleware now emits structured start/finish events with `requestId`, `userId`, and latency; `X-User-Id` propagated from authed routes.
+  - T-802: Error handler sanitizes client responses, logs structured context with reference ids.
+  - T-803: README + docs/tech.md describe logging/tracing behaviour; `scripts/smoke.sh` useful for verifying log output.
+  - T-804: Optional natchez scaffolding (`TracingMiddleware`, config toggle + noop entry point) ready for future exporters.
 
 ---
 
