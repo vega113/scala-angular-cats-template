@@ -226,8 +226,8 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-1201 | 🟢 | README: dev, test, deploy | 1h | T-203, T-606, T-901 |
-| T-1202 | 🟡 | Runbook: on-call basics, restart, logs | 0.5h | T-801, T-903 |
+| T-1201 | ✅ | README: dev, test, deploy | 1h | T-203, T-606, T-901 |
+| T-1202 | 🟢 | Runbook: on-call basics, restart, logs | 0.5h | T-801, T-903 |
 | T-1203 | 🟡 | Design references crosslinks | 0.5h | — |
 
 - DoD: Docs present, consistent with design and tech decisions.
