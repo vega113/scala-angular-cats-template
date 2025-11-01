@@ -235,6 +235,17 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 ---
 
+## Feature Backlog
+
+### Todo Auth Fullflow
+| ID | Status | Task | Estimate | Dependencies |
+|----|--------|------|----------|--------------|
+| T-1301 | 🟢 | Requirements: Todo Auth Fullflow | 1h | M4–M7, M11 review |
+
+- Feature docs: [requirements](features/todo-auth-fullflow/requirements.md) · design (pending) · tasks (pending)
+
+---
+
 ## Monitoring (Details)
 - Logging: JSON with fields [ts, level, logger, msg, requestId, userId?].
 - Tracing: natchez stub; spans around requests and DB (later opt-in).
