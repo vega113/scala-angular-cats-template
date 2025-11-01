@@ -7,9 +7,9 @@
 | T-1303 | 🟣 | Backend: password reset service, tokens, routes, tests | 6h | — | Includes migration `V2__password_reset_tokens.sql`, service + integration tests |
 | T-1304 | 🟣 | Backend: email service abstraction & config | 4h | — | Implement logging provider, production-ready interface, config wiring |
 | T-1305 | 🟣 | Frontend: auth flows (signup/login/reset) | 6h | — | Standalone pages, guards, interceptors, unit tests |
-| T-1309 | 🟡 | Backend: account activation tokens & flow | 5h | T-1303 |
-| T-1310 | 🟡 | Frontend: activation UX (pending screen, activation page) | 5h | T-1305, T-1309 |
-| T-1311 | 🟡 | Frontend: todo creation UX polish | 2h | T-1306 |
+| T-1309 | 🟢 | Backend: account activation tokens & flow | 5h | T-1303 |
+| T-1310 | 🟢 | Frontend: activation UX (pending screen, activation page) | 5h | T-1305, T-1309 |
+| T-1311 | 🟢 | Frontend: todo creation UX polish | 2h | T-1306 |
 | T-1306 | 🟡 | Frontend: todo UI enhancements | 5h | — | List filters, CRUD UX, align with backend responses |
 | T-1307 | 🟡 | Tooling & docs: tests, smoke updates, README/runbook | 3h | — | Ensure `npm --prefix ui test` real tests, docs for EMAIL_* env vars |
 | T-1308 | 🟡 | Final integration, manual QA, PR wrap-up | 2h | — | End-to-end verification, update task statuses |
