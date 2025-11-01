@@ -1,6 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { authCanMatch } from './core/guards/auth.guards';
+
 const routes: Routes = [
   {
     path: '',
@@ -13,6 +15,7 @@ const routes: Routes = [
   },
   {
     path: 'todos',
+    canMatch: [authCanMatch],
     loadChildren: () => import('./features/todos/todos.module').then((m) => m.TodosModule),
   },
   {
