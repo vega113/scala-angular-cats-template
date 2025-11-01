@@ -34,7 +34,7 @@ final class TodoRoutes(
       respond(authed) {
         todoService
           .list(authed.userId, completed, sanitizedLimit, sanitizedOffset)
-          .flatMap(todos => Ok(todos.asJson))
+          .flatMap(todos => ApiResponse.success(todos.asJson))
       }
 
     case GET -> Root / UUIDVar(id) as authed =>
@@ -42,8 +42,8 @@ final class TodoRoutes(
         todoService
           .get(authed.userId, id)
           .flatMap:
-            case Some(todo) => Ok(todo.asJson)
-            case None => NotFound(errorBody("todo_not_found", "Todo not found"))
+            case Some(todo) => ApiResponse.success(todo.asJson)
+            case None => ApiResponse.error(ApiError.notFound("todo_not_found", "Todo not found"))
       }
 
     case req @ PUT -> Root / UUIDVar(id) as authed =>
@@ -58,10 +58,11 @@ final class TodoRoutes(
           .delete(authed.userId, id)
           .attempt
           .flatMap:
-            case Right(_) => NoContent()
-            case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
-            case Left(other) =>
-              InternalServerError(errorBody("todo_delete_failed", other.getMessage))
+            case Right(_) => ApiResponse.noContent
+            case Left(TodoError.NotFound) =>
+              ApiResponse.error(ApiError.notFound("todo_not_found", "Todo not found"))
+            case Left(_) =>
+              ApiResponse.error(ApiError.internal("todo_delete_failed", "Unable to delete todo"))
       }
 
   private def handleCreate(user: AuthUser, req: Request[IO]): IO[Response[IO]] =
@@ -70,10 +71,11 @@ final class TodoRoutes(
         .create(user.userId, body)
         .attempt
         .flatMap:
-          case Right(todo) => Created(todo.asJson)
+          case Right(todo) => ApiResponse.success(Status.Created, todo.asJson)
           case Left(err: IllegalArgumentException) =>
-            BadRequest(errorBody("validation_failed", err.getMessage))
-          case Left(other) => InternalServerError(errorBody("todo_create_failed", other.getMessage))
+            ApiResponse.error(ApiError.unprocessableEntity("validation_failed", err.getMessage))
+          case Left(_) =>
+            ApiResponse.error(ApiError.internal("todo_create_failed", "Unable to create todo"))
     }
 
   private def handleUpdate(userId: UUID, id: UUID, req: Request[IO]): IO[Response[IO]] =
@@ -82,12 +84,13 @@ final class TodoRoutes(
         .update(userId, id, body)
         .attempt
         .flatMap:
-          case Right(todo) => Ok(todo.asJson)
-          case Left(TodoError.NotFound) => NotFound(errorBody("todo_not_found", "Todo not found"))
+          case Right(todo) => ApiResponse.success(todo.asJson)
+          case Left(TodoError.NotFound) =>
+            ApiResponse.error(ApiError.notFound("todo_not_found", "Todo not found"))
           case Left(err: IllegalArgumentException) =>
-            BadRequest(errorBody("validation_failed", err.getMessage))
-          case Left(other) =>
-            InternalServerError(errorBody("todo_update_failed", other.getMessage))
+            ApiResponse.error(ApiError.unprocessableEntity("validation_failed", err.getMessage))
+          case Left(_) =>
+            ApiResponse.error(ApiError.internal("todo_update_failed", "Unable to update todo"))
     }
 
   private def toggleTodo(userId: UUID, id: UUID): IO[Response[IO]] =
@@ -108,16 +111,18 @@ final class TodoRoutes(
             .flatMap:
               case Right(todo) =>
                 logger.info(s"Toggled todo ${todo.id} for user $userId to ${todo.completed}") *>
-                  Ok(todo.asJson)
+                  ApiResponse.success(todo.asJson)
               case Left(TodoError.NotFound) =>
                 logger.warn(s"Toggle failed for todo $id and user $userId: not found") *>
-                  NotFound(errorBody("todo_not_found", "Todo not found"))
-              case Left(other) =>
-                logger.error(other)(s"Toggle failed for todo $id and user $userId") *>
-                  InternalServerError(errorBody("todo_toggle_failed", other.getMessage))
+                  ApiResponse.error(ApiError.notFound("todo_not_found", "Todo not found"))
+              case Left(_) =>
+                logger.error(s"Toggle failed for todo $id and user $userId") *>
+                  ApiResponse.error(
+                    ApiError.internal("todo_toggle_failed", "Unable to toggle todo")
+                  )
         case None =>
           logger.warn(s"Toggle requested for missing todo $id and user $userId") *>
-            NotFound(errorBody("todo_not_found", "Todo not found"))
+            ApiResponse.error(ApiError.notFound("todo_not_found", "Todo not found"))
 
   private def sanitizeLimit(raw: Int): Int =
     math.max(1, math.min(raw, pagination.maxPageSize))
@@ -141,6 +146,3 @@ object TodoRoutes:
   private object CompletedFilter extends OptionalQueryParamDecoderMatcher[Boolean]("completed")
   private object Limit extends OptionalQueryParamDecoderMatcher[Int]("limit")
   private object Offset extends OptionalQueryParamDecoderMatcher[Int]("offset")
-
-  private def errorBody(code: String, message: String): Json =
-    Json.obj("error" -> Json.obj("code" -> code.asJson, "message" -> message.asJson))

@@ -2,7 +2,7 @@ package com.example.app.http.middleware
 
 import cats.data.Kleisli
 import cats.effect.IO
-import io.circe.Json
+import com.example.app.http.{ApiError, ApiResponse}
 import org.http4s.*
 import org.http4s.circe.CirceEntityEncoder.*
 import org.http4s.dsl.io.*
@@ -26,15 +26,7 @@ object ErrorHandler:
           ),
           th
         )("Unhandled exception in request pipeline")
-        body = Json.obj(
-          "error" -> Json.obj(
-            "code" -> Json.fromString("internal_error"),
-            "message" -> Json.fromString("Internal server error"),
-            "ref" -> Json.fromString(rid)
-          )
-        )
-      yield Response[IO](status = Status.InternalServerError)
-        .withEntity(body)
-        .putHeaders(Header.Raw(RequestIdHeader, rid))
+        res <- ApiResponse.error(ApiError.internal("internal_error", "Internal server error"))
+      yield res.putHeaders(Header.Raw(RequestIdHeader, rid))
     }
   }

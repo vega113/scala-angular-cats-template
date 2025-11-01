@@ -5,7 +5,7 @@ import com.example.app.auth.{AuthError, AuthResult, AuthService, User}
 import com.example.app.security.jwt.JwtPayload
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
-import io.circe.{Decoder, Encoder, Json}
+import io.circe.{Decoder, Encoder}
 import org.http4s.circe.*
 import org.http4s.dsl.io.*
 import org.http4s.{EntityDecoder, HttpRoutes, Request, Response, Status}
@@ -27,20 +27,20 @@ final class AuthRoutes(authService: AuthService[IO]) {
   private def signup(req: Request[IO]): IO[Response[IO]] =
     req.as[SignupRequest].flatMap { body =>
       authService.signup(body.email, body.password).attempt.flatMap {
-        case Right(result) => jsonResponse(Status.Created, result.asJson)
+        case Right(result) => ApiResponse.success(Status.Created, result.asJson)
         case Left(err: AuthError) => authErrorResponse(err)
-        case Left(other) =>
-          jsonResponse(Status.InternalServerError, errorBody("signup_failed", other.getMessage))
+        case Left(_) =>
+          ApiResponse.error(ApiError.internal("signup_failed", "Unable to complete signup"))
       }
     }
 
   private def login(req: Request[IO]): IO[Response[IO]] =
     req.as[LoginRequest].flatMap { body =>
       authService.login(body.email, body.password).attempt.flatMap {
-        case Right(result) => jsonResponse(Status.Ok, result.asJson)
+        case Right(result) => ApiResponse.success(result.asJson)
         case Left(err: AuthError) => authErrorResponse(err)
-        case Left(other) =>
-          jsonResponse(Status.InternalServerError, errorBody("login_failed", other.getMessage))
+        case Left(_) =>
+          ApiResponse.error(ApiError.internal("login_failed", "Unable to authenticate"))
       }
     }
 
@@ -50,31 +50,24 @@ final class AuthRoutes(authService: AuthService[IO]) {
         authService.authenticate(token).flatMap {
           case Some(JwtPayload(userId, _)) =>
             authService.currentUser(userId).flatMap {
-              case Some(user) => jsonResponse(Status.Ok, UserResponse.from(user).asJson)
-              case None =>
-                jsonResponse(Status.NotFound, errorBody("user_not_found", "User not found"))
+              case Some(user) => ApiResponse.success(UserResponse.from(user).asJson)
+              case None => ApiResponse.error(ApiError.notFound("user_not_found", "User not found"))
             }
           case None =>
-            jsonResponse(
-              Status.Unauthorized,
-              errorBody("invalid_token", "Invalid or expired token")
-            )
+            ApiResponse.error(ApiError.unauthorized("invalid_token", "Invalid or expired token"))
         }
       case None =>
-        jsonResponse(Status.Unauthorized, errorBody("missing_token", "Authorization token missing"))
+        ApiResponse.error(ApiError.unauthorized("missing_token", "Authorization token missing"))
     }
 
   private def extractToken(req: Request[IO]): IO[Option[String]] =
     IO.pure(TokenExtractor.bearerToken(req))
 
-  private def authErrorResponse(err: AuthError): IO[Response[IO]] = err match
+  private def authErrorResponse(err: AuthError) = err match
     case AuthError.EmailAlreadyExists =>
-      jsonResponse(Status.Conflict, errorBody("email_exists", "Email already registered"))
+      ApiResponse.error(ApiError.conflict("email_exists", "Email already registered"))
     case AuthError.InvalidCredentials =>
-      jsonResponse(Status.Unauthorized, errorBody("invalid_credentials", "Invalid credentials"))
-
-  private def jsonResponse(status: Status, json: Json): IO[Response[IO]] =
-    IO.pure(Response[IO](status).withEntity(json))
+      ApiResponse.error(ApiError.unauthorized("invalid_credentials", "Invalid credentials"))
 }
 
 object AuthRoutes {
@@ -94,9 +87,6 @@ object AuthRoutes {
   given Encoder[AuthResult] = Encoder.instance { result =>
     AuthPayload(result.token, UserResponse.from(result.user)).asJson
   }
-
-  private[http] def errorBody(code: String, message: String): Json =
-    Map("error" -> Map("code" -> code.asJson, "message" -> message.asJson).asJson).asJson
 
   private object UserResponse {
     def from(user: User): UserResponse = UserResponse(user.id, user.email)

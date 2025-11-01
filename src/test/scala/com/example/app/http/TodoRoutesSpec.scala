@@ -100,7 +100,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     withApp() { (app, _) =>
       for
         resp <- app.run(Request[IO](POST, baseUri).withEntity(Json.obj("title" -> "  ".asJson)))
-        _ = assertEquals(resp.status, Status.BadRequest)
+        _ = assertEquals(resp.status, Status.UnprocessableEntity)
         body <- resp.as[Json]
       yield assertEquals(errorCode(body), Some("validation_failed"))
     }

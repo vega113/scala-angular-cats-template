@@ -19,17 +19,13 @@ class Routes(
 ) {
   private val ops: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "health" =>
-      Ok(Json.obj("status" -> Json.fromString("ok")))
+      ApiResponse.success(Json.obj("status" -> Json.fromString("ok")))
     case GET -> Root / "ready" =>
       readinessCheck.attempt.flatMap {
         case Right(_) => Ok(Json.obj("status" -> Json.fromString("ok")))
         case Left(err) =>
           val message = Option(err.getMessage).getOrElse(err.getClass.getSimpleName)
-          val body = Json.obj(
-            "status" -> Json.fromString("error"),
-            "message" -> Json.fromString(message)
-          )
-          ServiceUnavailable(body)
+          ApiResponse.error(ApiError.serviceUnavailable("ready_check_failed", message))
       }
   }
 

@@ -115,7 +115,8 @@ class RoutesSpec extends CatsEffectSuite:
       body <- res.as[Json]
     yield {
       assertEquals(res.status, Status.ServiceUnavailable)
-      assertEquals(body.hcursor.get[String]("status"), Right("error"))
+      assertEquals(body.hcursor.downField("error").get[String]("code"), Right("ready_check_failed"))
+      assertEquals(body.hcursor.downField("error").get[String]("message"), Right("db down"))
     }
   }
 
