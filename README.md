@@ -68,10 +68,26 @@ Environment variables (see docs/requirements.md for full list):
 - Optional tracing scaffold (`natchez`) is disabled by default; set `TRACING_ENABLED=true` and swap the entrypoint in `com.example.app.tracing.Tracing` when wiring Jaeger/OTLP/etc.
 
 ## Deployment (Heroku)
-- Buildpacks: `heroku/nodejs` then `heroku/java`
-- `sbt stage` is invoked during slug build; Procfile runs staged binary:
-  - `web: target/universal/stage/bin/<app> -Dhttp.port=$PORT`
-- Postgres: use `DATABASE_URL`; enable SSL (`sslmode=require`) as needed
+- Buildpacks (set in this order):
+  1. `heroku/nodejs` (builds the Angular UI during `sbt stage`)
+  2. `heroku/java`
+  ```bash
+  heroku buildpacks:set heroku/nodejs
+  heroku buildpacks:add --index 2 heroku/java
+  ```
+- `sbt stage` is invoked during slug build; the committed `Procfile` runs the staged binary:
+  ```Procfile
+  web: target/universal/stage/bin/scala-angular-cats-template -Dhttp.port=$PORT
+  ```
+- Recommended config vars (examples):
+  | Config var        | Purpose                                | Example value                |
+  |-------------------|----------------------------------------|------------------------------|
+  | `ANGULAR_MODE`     | Serve pre-built UI (disables dev proxy)| `prod`                       |
+  | `JWT_SECRET`       | Signing key for auth tokens            | `super-secret-change-me`     |
+  | `LOG_LEVEL`        | Runtime log level (JSON format)        | `INFO`                       |
+  | `TRACING_ENABLED`  | Enable natchez middleware (optional)   | `false`                      |
+  | `DATABASE_URL`     | Provided by Heroku Postgres add-on     | *(auto-set by Heroku)*       |
+- Postgres: connection details arrive via `DATABASE_URL`; SSL is auto-detected (`sslmode=require` when present).
 
 ## Project Layout
 - Backend: `src/main/scala`, `src/main/resources` (Flyway migrations, Logback, static in prod)

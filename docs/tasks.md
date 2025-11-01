@@ -174,12 +174,15 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-901 | 🟡 | Buildpacks + Procfile + system.properties | 0.5h | T-107, T-203 |
-| T-902 | 🟡 | Heroku env mapping (`DATABASE_URL`, `JWT_*`) | 0.5h | T-303, T-402 |
+| T-901 | ✅ | Buildpacks + Procfile + system.properties | 0.5h | T-107, T-203 |
+| T-902 | ✅ | Heroku env mapping (`DATABASE_URL`, `JWT_*`) | 0.5h | T-303, T-402 |
 | T-903 | 🟡 | Heroku release smoke (health/readiness) | 0.5h | T-203 |
 
 - DoD: `heroku builds:create` succeeds; app boots; health passes; logs in JSON.
-- Agent Context: Procfile, system.properties, docs/deploy.md.
+- Agent Context: Procfile, system.properties, README deployment section.
+- Notes:
+  - T-901: `Procfile` executes staged binary; `system.properties` pins Java 21; README documents buildpack ordering.
+  - T-902: README lists required config vars (`ANGULAR_MODE=prod`, `JWT_SECRET`, etc.); backend auto-detects `DATABASE_URL` & SSL.
 
 ---
 

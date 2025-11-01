@@ -175,11 +175,11 @@
 | Angular app scaffold | UI project in `ui/`, basic TODO screens |  | 4h |
 | Dev proxy setup | `ui/src/proxy.conf.js` with BACKEND_* env |  | 1h |
 | Auth layer | JWT + bcrypt, protected routes |  | 4h |
-| Heroku stage glue | Native-packager config + UI build in `stage` |  | 2h |
+| Heroku stage glue | Native-packager config + UI build in `stage` | ✅ | 2h |
 | TestContainers PG | Integration fixtures + Flyway |  | 3h |
 | Prod static serving | Angular build to `static/`, SPA fallback |  | 2h |
 | SBT ⇄ UI integration | npm tasks from SBT; optional `run` hook |  | 2h |
-| Heroku config | Buildpack setup, Procfile, system.properties |  | 2h |
+| Heroku config | Buildpack setup, Procfile, system.properties | ✅ | 2h |
 | Health/Readiness | `/health`, `/ready` endpoints with DB check |  | 1h |
 | Tests | munit/cats-effect + http4s + DB smoke |  | 4h |
 | Docs | README, run/deploy instructions |  | 1h |
