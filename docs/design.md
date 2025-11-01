@@ -127,7 +127,7 @@ AngularDevServer --> Dev: Render UI
 
 ## Configuration Summary
 - Ports: backend `8080`, Angular dev `4200`.
-- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_MAX_POOL_SIZE`, `LOG_LEVEL`, `JWT_SECRET`, `JWT_TTL`, `CORS_ALLOWED_ORIGINS` (dev only).
+- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `LOG_LEVEL`, `TRACING_ENABLED`.
 
 ## Directory Structure (high level)
 - Root SBT project: `build.sbt`, `project/`.

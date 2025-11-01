@@ -70,7 +70,7 @@ For a template emphasizing pragmatic FP with rich ecosystem support and Heroku-f
 - Tracing scaffold: optional natchez `EntryPoint` wiring (`TracingMiddleware`) is disabled by default but provides a ready hook for Jaeger/OTLP/etc. Toggle via `TRACING_ENABLED=true` and swap the entry point implementation when integrating with a collector.
 
 ## Timeouts & Pool Sizing
-- HTTP server: `http.request-header-timeout`, `http.idle-timeout`, and `http.shutdown-timeout` (defaults 15s/60s/10s) configure Ember’s request/idle/shutdown windows. Heroku dynos can tune these via env overrides if needed.
+- HTTP server: `http.request-header-timeout`, `http.idle-timeout`, and `http.shutdown-timeout` (defaults 15s/60s/10s) configure Ember’s request/idle/shutdown windows. Override via env vars like `APP_HTTP_REQUEST_HEADER_TIMEOUT`, `APP_HTTP_IDLE_TIMEOUT`, and `APP_HTTP_SHUTDOWN_TIMEOUT` when deploying (PureConfig maps `app.http.*` keys automatically).
 - Database: HikariCP now honours `db.max-pool-size`, `db.minimum-idle`, and `db.connection-timeout` (default 30s) so we can align with Postgres plan connection limits. Values map directly to Heroku env vars (`DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`).
 
 ## Rate Limiting (Placeholder)

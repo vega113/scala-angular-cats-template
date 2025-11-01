@@ -50,18 +50,20 @@ Alternatively, if using assembly:
 ## Configuration
 Environment variables (see docs/requirements.md for full list):
 - `HTTP_PORT` (default 8080)
-- `ANGULAR_MODE` (`dev|prod`)
+- `ANGULAR_MODE` (`dev|prod`; defaults to `dev`)
 - `ANGULAR_PORT` (default 4200)
-- `BACKEND_HOST`, `BACKEND_PORT` (dev proxy)
-- `DATABASE_URL` (Heroku-style)
+- `BACKEND_HOST`, `BACKEND_PORT` (dev proxy target)
+- `DATABASE_URL` (Heroku-style JDBC string)
+- `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA` (override defaults when not using `DATABASE_URL`)
+- `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT` (Hikari tuning)
 - `JWT_SECRET`, `JWT_TTL`
+- `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`
 - `LOG_LEVEL` (JSON logs)
-- `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`
 - `TRACING_ENABLED` (optional natchez scaffold)
 
 ## Testing
 - Backend unit/integration: `sbt test`
-- Frontend unit (if configured): `npm --prefix ui test`
+- Frontend unit: `npm --prefix ui test` (currently a placeholder that exits 0 until UI tests are implemented)
 - End-to-end smoke (requires API running locally): `scripts/smoke.sh`
 - Pre-push helper (formats, tests, lints, builds): `scripts/pre-push.sh`
 

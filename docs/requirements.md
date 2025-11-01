@@ -102,15 +102,15 @@
 - Single SBT project at repo root; `ui/` is a Node project managed by npm.
 - SBT plugins: sbt-native-packager (preferred for Heroku `stage`), plus task glue to call `npm` for UI build. Assembly remains optional fallback.
 - Dev tasks:
-  - `sbt run` launches backend; optional hook to run `npm run start` in `ui/` with `BACKEND_*` env vars.
-  - `npm --prefix ui start` launches Angular dev app (alternative if not using SBT hook).
+  - `ANGULAR_MODE=dev sbt run` launches the backend and automatically starts `npm ci` + `npm run start` in `ui/` with the proxy configured from `BACKEND_*`.
+  - `npm --prefix ui start` remains an alternative if you want to run Angular separately.
 - Prod build:
-  - `npm --prefix ui ci && npm --prefix ui run build:prod` then `sbt stage` (preferred) or `sbt assembly` fallback.
-  - The staged app or assembly bundles `src/main/resources/static` with UI assets.
+  - `ANGULAR_MODE=prod sbt run` runs `npm ci` + `npm run build:prod` before booting the API (assets emitted to `src/main/resources/static`).
+  - `sbt stage` (preferred) or `sbt assembly` (fallback) re-run the prod build and bundle `src/main/resources/static` alongside the backend.
 
 ### Configuration & Environments
 - application.conf (dev defaults) + env overrides.
-- Key env vars: `HTTP_PORT` (default 8080), `ANGULAR_MODE=dev|prod` (controls dev server hook), `ANGULAR_PORT` (default 4200), `BACKEND_HOST` (default localhost), `BACKEND_PORT` (derived), `DATABASE_URL`, `DB_MAX_POOL_SIZE`, `LOG_LEVEL` (default INFO, JSON output), `JWT_SECRET`, `JWT_TTL`, `CORS_ALLOWED_ORIGINS` (dev only).
+- Key env vars: `HTTP_PORT` (default 8080), `ANGULAR_MODE=dev|prod` (controls SBT dev server hook), `ANGULAR_PORT` (default 4200), `BACKEND_HOST`/`BACKEND_PORT` (Angular proxy target), `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `LOG_LEVEL`, `TRACING_ENABLED`.
 - Heroku: relies on `$PORT` (maps to `HTTP_PORT`), `DATABASE_URL` (parse and set SSL).
 
 ### Observability (Logging/Tracing)
