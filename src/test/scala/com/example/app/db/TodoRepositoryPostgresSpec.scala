@@ -9,6 +9,7 @@ import com.example.app.config.{
   HttpConfig,
   JwtConfig,
   LoggingConfig,
+  EmailConfig,
   PasswordResetConfig,
   TodoConfig,
   TracingConfig
@@ -84,6 +85,12 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       ),
       jwt = JwtConfig(secret = Some("integration"), ttl = 3600),
       logging = LoggingConfig(level = "INFO"),
+      email = EmailConfig(
+        provider = "logging",
+        fromAddress = Some("no-reply@example.com"),
+        apiKey = None,
+        resetSubject = "Reset your password"
+      ),
       tracing = TracingConfig(enabled = false),
       todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100),
       passwordReset = PasswordResetConfig(

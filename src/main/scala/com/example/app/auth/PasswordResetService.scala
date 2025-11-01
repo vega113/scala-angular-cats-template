@@ -2,15 +2,15 @@ package com.example.app.auth
 
 import cats.effect.{Clock, Sync}
 import cats.syntax.all._
-import com.example.app.config.PasswordResetConfig
+import com.example.app.config.{EmailConfig, PasswordResetConfig}
 import com.example.app.security.PasswordHasher
+import com.example.app.email.EmailService
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import org.http4s.Uri
-import org.typelevel.log4cats.Logger
 
 trait PasswordResetService[F[_]] {
   def request(email: String): F[Unit]
@@ -25,26 +25,12 @@ object PasswordResetService {
     final case class PasswordTooWeak(message: String) extends Error(message)
   }
 
-  trait Notifier[F[_]] {
-    def notify(email: String, resetUrl: String, token: String): F[Unit]
-  }
-
-  object Notifier {
-    def logging[F[_]: Sync: Logger]: Notifier[F] =
-      (email, resetUrl, token) =>
-        Logger[F].info(
-          s"""Sending password reset email to $email
-             | Token: $token
-             | Reset URL: $resetUrl
-             |""".stripMargin
-        )
-  }
-
   final case class Dependencies[F[_]](
     userRepository: UserRepository[F],
     tokenRepository: PasswordResetTokenRepository[F],
     passwordHasher: PasswordHasher[F],
-    notifier: Notifier[F],
+    emailService: EmailService[F],
+    emailConfig: EmailConfig,
     config: PasswordResetConfig
   )
 
@@ -68,9 +54,14 @@ object PasswordResetService {
               expiresAt = now.plus(deps.config.tokenTtl.toMillis, ChronoUnit.MILLIS)
               _ <- deps.tokenRepository.create(user.id, tokenHash, expiresAt, now)
               resetUrl <- buildResetUrl(token)
-              _ <- deps.notifier.notify(user.email, resetUrl, token)
+              _ <- deps.emailService.sendPasswordReset(
+                to = user.email,
+                subject = deps.emailConfig.resetSubject,
+                resetUrl = resetUrl,
+                token = token
+              )
             yield ()
-          case None =>
+         case None =>
             // Avoid disclosing whether a user exists.
             F.unit
         }

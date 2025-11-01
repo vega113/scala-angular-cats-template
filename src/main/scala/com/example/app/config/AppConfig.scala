@@ -22,6 +22,12 @@ final case class DbConfig(
 ) derives ConfigReader
 final case class JwtConfig(secret: Option[String], ttl: Int) derives ConfigReader
 final case class LoggingConfig(level: String) derives ConfigReader
+final case class EmailConfig(
+  provider: String = "logging",
+  fromAddress: Option[String] = None,
+  apiKey: Option[String] = None,
+  resetSubject: String = "Reset your password"
+) derives ConfigReader
 final case class TracingConfig(enabled: Boolean) derives ConfigReader
 final case class TodoConfig(defaultPageSize: Int, maxPageSize: Int) derives ConfigReader
 final case class PasswordResetConfig(
@@ -34,6 +40,7 @@ final case class AppConfig(
   db: DbConfig,
   jwt: JwtConfig,
   logging: LoggingConfig,
+  email: EmailConfig,
   tracing: TracingConfig,
   todo: TodoConfig,
   passwordReset: PasswordResetConfig

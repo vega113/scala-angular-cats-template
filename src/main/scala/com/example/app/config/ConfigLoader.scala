@@ -32,6 +32,10 @@ object ConfigLoader:
       sys.env
         .get("PASSWORD_RESET_TOKEN_TTL")
         .flatMap(parseFiniteDuration)
+    val emailProvider = sys.env.get("EMAIL_PROVIDER").map(_.trim).filter(_.nonEmpty)
+    val emailFromAddress = sys.env.get("EMAIL_FROM_ADDRESS").map(_.trim).filter(_.nonEmpty)
+    val emailApiKey = sys.env.get("EMAIL_API_KEY").map(_.trim).filter(_.nonEmpty)
+    val emailResetSubject = sys.env.get("EMAIL_RESET_SUBJECT").map(_.trim).filter(_.nonEmpty)
 
     val updatedAngular = cfg.angular.copy(
       mode = angularMode.getOrElse(cfg.angular.mode),
@@ -42,6 +46,13 @@ object ConfigLoader:
       enabled = tracingEnabled.getOrElse(cfg.tracing.enabled)
     )
 
+    val updatedEmail = cfg.email.copy(
+      provider = emailProvider.getOrElse(cfg.email.provider),
+      fromAddress = emailFromAddress.orElse(cfg.email.fromAddress),
+      apiKey = emailApiKey.orElse(cfg.email.apiKey),
+      resetSubject = emailResetSubject.getOrElse(cfg.email.resetSubject)
+    )
+
     val updatedPasswordReset = cfg.passwordReset.copy(
       resetUrlBase = passwordResetUrlBase.getOrElse(cfg.passwordReset.resetUrlBase),
       tokenTtl = passwordResetTtl.getOrElse(cfg.passwordReset.tokenTtl)
@@ -50,6 +61,7 @@ object ConfigLoader:
     cfg.copy(
       angular = updatedAngular,
       tracing = updatedTracing,
+      email = updatedEmail,
       passwordReset = updatedPasswordReset
     )
 

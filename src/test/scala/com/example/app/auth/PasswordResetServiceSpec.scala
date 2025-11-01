@@ -3,7 +3,8 @@ package com.example.app.auth
 import cats.effect.{Clock, IO}
 import cats.effect.kernel.Ref
 import cats.syntax.all._
-import com.example.app.config.PasswordResetConfig
+import com.example.app.config.{EmailConfig, PasswordResetConfig}
+import com.example.app.email.EmailService
 import com.example.app.security.PasswordHasher
 import munit.CatsEffectSuite
 
@@ -14,25 +15,30 @@ import scala.concurrent.duration._
 class PasswordResetServiceSpec extends CatsEffectSuite {
 
   private val hasher = PasswordHasher.bcrypt[IO]()
-  private val config = PasswordResetConfig(
+  private val resetConfig = PasswordResetConfig(
     resetUrlBase = "https://app.example.com/reset-password",
     tokenTtl = 1.hour
   )
+  private val emailConfig = EmailConfig(
+    provider = "logging",
+    fromAddress = Some("no-reply@example.com"),
+    apiKey = None,
+    resetSubject = "Reset your password"
+  )
 
-  private def service(implicit
+  private def service(using
     userRepo: InMemoryUserRepository,
     tokenRepo: InMemoryTokenRepository,
-    notifier: RecordingNotifier
+    emailService: RecordingEmailService
   ): PasswordResetService[IO] =
     PasswordResetService[IO](
-      PasswordResetService.Dependencies[
-        IO
-      ](
+      PasswordResetService.Dependencies[IO](
         userRepository = userRepo,
         tokenRepository = tokenRepo,
         passwordHasher = hasher,
-        notifier = notifier,
-        config = config
+        emailService = emailService,
+        emailConfig = emailConfig,
+        config = resetConfig
       )
     )
 
@@ -40,23 +46,24 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     for
       usersRef <- Ref.of[IO, Map[UUID, User]](Map.empty)
       tokensRef <- Ref.of[IO, Map[UUID, PasswordResetToken]](Map.empty)
-      notificationsRef <- Ref.of[IO, List[(String, String, String)]](List.empty)
+      notificationsRef <- Ref.of[IO, List[(String, String, String, String)]](Nil)
       userRepo = new InMemoryUserRepository(usersRef)
       tokenRepo = new InMemoryTokenRepository(tokensRef)
-      notifier = new RecordingNotifier(notificationsRef)
+      emailService = new RecordingEmailService(notificationsRef)
       _ <- userRepo.create("reset@example.com", "hash")
-      svc = service(using userRepo, tokenRepo, notifier)
+      svc = service(using userRepo, tokenRepo, emailService)
       _ <- svc.request("reset@example.com")
       tokens <- tokensRef.get
-      note <- notificationsRef.get
+      notifications <- notificationsRef.get
     yield {
       assert(tokens.values.nonEmpty)
       val stored = tokens.values.head
       assertEquals(stored.consumedAt, None)
       assert(stored.expiresAt.isAfter(Instant.now.minusSeconds(10)))
-      val (email, url, token) = note.head
-      assertEquals(email, "reset@example.com")
-      assert(url.contains(token))
+      val (to, subject, resetUrl, token) = notifications.head
+      assertEquals(to, "reset@example.com")
+      assert(subject.contains("Reset"))
+      assert(resetUrl.contains(token))
       assertEquals(stored.tokenHash.length, 64)
     }
   }
@@ -65,17 +72,17 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     for
       usersRef <- Ref.of[IO, Map[UUID, User]](Map.empty)
       tokensRef <- Ref.of[IO, Map[UUID, PasswordResetToken]](Map.empty)
-      notificationsRef <- Ref.of[IO, List[(String, String, String)]](List.empty)
+      notificationsRef <- Ref.of[IO, List[(String, String, String, String)]](Nil)
       userRepo = new InMemoryUserRepository(usersRef)
       tokenRepo = new InMemoryTokenRepository(tokensRef)
-      notifier = new RecordingNotifier(notificationsRef)
-      svc = service(using userRepo, tokenRepo, notifier)
+      emailService = new RecordingEmailService(notificationsRef)
+      svc = service(using userRepo, tokenRepo, emailService)
       _ <- svc.request("missing@example.com")
       tokens <- tokensRef.get
-      note <- notificationsRef.get
+      notifications <- notificationsRef.get
     yield {
       assertEquals(tokens.values.size, 0)
-      assertEquals(note, Nil)
+      assertEquals(notifications, Nil)
     }
   }
 
@@ -83,14 +90,14 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     for
       usersRef <- Ref.of[IO, Map[UUID, User]](Map.empty)
       tokensRef <- Ref.of[IO, Map[UUID, PasswordResetToken]](Map.empty)
-      notificationsRef <- Ref.of[IO, List[(String, String, String)]](List.empty)
+      notificationsRef <- Ref.of[IO, List[(String, String, String, String)]](Nil)
       userRepo = new InMemoryUserRepository(usersRef)
       tokenRepo = new InMemoryTokenRepository(tokensRef)
-      notifier = new RecordingNotifier(notificationsRef)
+      emailService = new RecordingEmailService(notificationsRef)
       user <- userRepo.create("reset-success@example.com", "initial")
-      svc = service(using userRepo, tokenRepo, notifier)
+      svc = service(using userRepo, tokenRepo, emailService)
       _ <- svc.request(user.email)
-      token <- notificationsRef.get.map(_.head._3)
+      token <- notificationsRef.get.map(_.head._4)
       _ <- svc.confirm(token, "new-password")
       updatedUser <- userRepo.findById(user.id)
       consumed <- tokensRef.get.map(_.values.forall(_.consumedAt.isDefined))
@@ -107,14 +114,14 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     for
       usersRef <- Ref.of[IO, Map[UUID, User]](Map.empty)
       tokensRef <- Ref.of[IO, Map[UUID, PasswordResetToken]](Map.empty)
-      notificationsRef <- Ref.of[IO, List[(String, String, String)]](List.empty)
+      notificationsRef <- Ref.of[IO, List[(String, String, String, String)]](Nil)
       userRepo = new InMemoryUserRepository(usersRef)
       tokenRepo = new InMemoryTokenRepository(tokensRef)
-      notifier = new RecordingNotifier(notificationsRef)
+      emailService = new RecordingEmailService(notificationsRef)
       user <- userRepo.create("expired@example.com", "initial")
-      svc = service(using userRepo, tokenRepo, notifier)
+      svc = service(using userRepo, tokenRepo, emailService)
       _ <- svc.request(user.email)
-      token <- notificationsRef.get.map(_.head._3)
+      token <- notificationsRef.get.map(_.head._4)
       _ <- tokensRef.update(_.view.mapValues(_.copy(expiresAt = Instant.EPOCH)).toMap)
       result <- svc.confirm(token, "another-pass").attempt
       stored <- tokensRef.get
@@ -128,11 +135,11 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     for
       usersRef <- Ref.of[IO, Map[UUID, User]](Map.empty)
       tokensRef <- Ref.of[IO, Map[UUID, PasswordResetToken]](Map.empty)
-      notificationsRef <- Ref.of[IO, List[(String, String, String)]](List.empty)
+      notificationsRef <- Ref.of[IO, List[(String, String, String, String)]](Nil)
       userRepo = new InMemoryUserRepository(usersRef)
       tokenRepo = new InMemoryTokenRepository(tokensRef)
-      notifier = new RecordingNotifier(notificationsRef)
-      svc = service(using userRepo, tokenRepo, notifier)
+      emailService = new RecordingEmailService(notificationsRef)
+      svc = service(using userRepo, tokenRepo, emailService)
       result <- svc.confirm("missing-token", "password123").attempt
     yield assertEquals(result.left.toOption, Some(PasswordResetService.Error.InvalidToken))
   }
@@ -191,9 +198,14 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
       state.update(_.updatedWith(tokenId)(_.map(_.copy(consumedAt = Some(at)))))
   }
 
-  private final class RecordingNotifier(ref: Ref[IO, List[(String, String, String)]])
-      extends PasswordResetService.Notifier[IO] {
-    override def notify(email: String, resetUrl: String, token: String): IO[Unit] =
-      ref.update(list => (email, resetUrl, token) :: list)
+  private final class RecordingEmailService(ref: Ref[IO, List[(String, String, String, String)]])
+      extends EmailService[IO] {
+    override def sendPasswordReset(
+      to: String,
+      subject: String,
+      resetUrl: String,
+      token: String
+    ): IO[Unit] =
+      ref.update(entries => (to, subject, resetUrl, token) :: entries)
   }
 }

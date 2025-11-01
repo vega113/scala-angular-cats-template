@@ -12,6 +12,7 @@ import org.http4s.server.staticcontent.resourceServiceBuilder
 import org.http4s.headers.Accept
 import com.example.app.config.*
 import com.example.app.auth.{AuthService, PasswordResetService}
+import com.example.app.email.EmailService
 import com.example.app.http.{AuthRoutes, Routes, TodoRoutes}
 import com.example.app.http.middleware.{
   ErrorHandler,
@@ -31,18 +32,19 @@ object Server:
       logger <- Resource.eval(Slf4jLogger.create[IO])
       readinessCheck = sql"select 1".query[Int].unique.transact(resources.transactor).void
       given Logger[IO] = logger
+      emailService = EmailService.fromConfig[IO](cfg.email)
       authService = AuthService[IO](
         resources.userRepository,
         resources.passwordHasher,
         resources.jwtService
       )
-      passwordResetNotifier = PasswordResetService.Notifier.logging[IO]
       passwordResetService = PasswordResetService[IO](
         PasswordResetService.Dependencies(
           resources.userRepository,
           resources.passwordResetTokenRepository,
           resources.passwordHasher,
-          passwordResetNotifier,
+          emailService,
+          cfg.email,
           cfg.passwordReset
         )
       )

@@ -59,6 +59,8 @@ Environment variables (see docs/requirements.md for full list):
 - `JWT_SECRET`, `JWT_TTL`
 - `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`
 - `LOG_LEVEL` (JSON logs)
+- `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, `EMAIL_API_KEY`, `EMAIL_RESET_SUBJECT`
+- `PASSWORD_RESET_URL_BASE`, `PASSWORD_RESET_TOKEN_TTL`
 - `TRACING_ENABLED` (optional natchez scaffold)
 
 ## Testing
