@@ -42,7 +42,7 @@ export class SignupPageComponent {
     const { email } = this.form.getRawValue();
 
     this.authService.signup({ email, password }).subscribe({
-      next: () => this.router.navigate(['/todos']),
+      next: () => this.router.navigate(['/auth/activate/pending']),
       error: (error: unknown) => this.errorSignal.set(extractErrorMessage(error)),
     });
   }

@@ -6,6 +6,7 @@ import {
   LoginRequest,
   PasswordResetConfirmPayload,
   PasswordResetRequestPayload,
+  SignupResponse,
 } from '../models/auth.model';
 import { AuthApiService } from './auth-api.service';
 import { AuthService } from './auth.service';
@@ -21,6 +22,10 @@ describe('AuthService', () => {
     token: 'jwt-token',
     user: { id: '123', email: 'user@example.com' },
   };
+  const signupResponse: SignupResponse = {
+    status: 'activation_required',
+    message: 'Check your email',
+  };
 
   beforeEach(() => {
     api = jasmine.createSpyObj<AuthApiService>('AuthApiService', [
@@ -29,6 +34,7 @@ describe('AuthService', () => {
       'me',
       'requestPasswordReset',
       'confirmPasswordReset',
+      'confirmActivation',
     ]);
 
     TestBed.configureTestingModule({
@@ -58,6 +64,34 @@ describe('AuthService', () => {
         expect(user).toEqual(authResponse.user);
         expect(tokenService.token()).toBe(authResponse.token);
         expect(service.isAuthenticated()).toBeTrue();
+        done();
+      },
+    });
+  });
+
+  it('signs up and records pending activation email', (done) => {
+    api.signup.and.returnValue(of(signupResponse));
+
+    service.signup({ email: 'NewUser@Example.com ', password: 'secret' }).subscribe({
+      next: (response) => {
+        expect(response).toEqual(signupResponse);
+        expect(tokenService.token()).toBeNull();
+        expect(service.isAuthenticated()).toBeFalse();
+        expect(service.pendingActivationEmail()).toBe('newuser@example.com');
+        done();
+      },
+    });
+  });
+
+  it('confirms activation and stores auth state', (done) => {
+    api.confirmActivation.and.returnValue(of(authResponse));
+
+    service.confirmActivation({ token: 'activate-me' }).subscribe({
+      next: (user) => {
+        expect(user).toEqual(authResponse.user);
+        expect(tokenService.token()).toBe(authResponse.token);
+        expect(service.isAuthenticated()).toBeTrue();
+        expect(service.pendingActivationEmail()).toBeNull();
         done();
       },
     });
@@ -101,5 +135,11 @@ describe('AuthService', () => {
         done();
       },
     });
+  });
+
+  it('clears activation email on logout', () => {
+    service.setPendingActivationEmail('user@example.com');
+    service.logout();
+    expect(service.pendingActivationEmail()).toBeNull();
   });
 });

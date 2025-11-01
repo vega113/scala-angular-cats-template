@@ -39,6 +39,44 @@ describe('AuthApiService', () => {
     expect(email).toBe('user@example.com');
   });
 
+  it('should map signup response', () => {
+    let status: string | undefined;
+    let message: string | undefined;
+
+    service.signup({ email: 'user@example.com', password: 'secret' }).subscribe((response) => {
+      status = response.status;
+      message = response.message;
+    });
+
+    const req = httpMock.expectOne('/api/auth/signup');
+    expect(req.request.method).toBe('POST');
+    req.flush({
+      status: 'activation_required',
+      message: 'Check your email',
+    });
+
+    expect(status).toBe('activation_required');
+    expect(message).toBe('Check your email');
+  });
+
+  it('should confirm activation', () => {
+    let token: string | undefined;
+
+    service.confirmActivation({ token: 'activate' }).subscribe((response) => {
+      token = response.token;
+    });
+
+    const req = httpMock.expectOne('/api/auth/activation/confirm');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ token: 'activate' });
+    req.flush({
+      token: 'jwt-token',
+      user: { id: '123', email: 'user@example.com' },
+    });
+
+    expect(token).toBe('jwt-token');
+  });
+
   it('should issue password reset request', () => {
     service.requestPasswordReset({ email: 'reset@example.com' }).subscribe();
     const req = httpMock.expectOne('/api/auth/password-reset/request');

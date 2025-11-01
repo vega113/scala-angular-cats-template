@@ -6,6 +6,8 @@ import { LoginPageComponent } from './pages/login-page/login-page.component';
 import { PasswordResetConfirmPageComponent } from './pages/password-reset-confirm-page/password-reset-confirm-page.component';
 import { PasswordResetRequestPageComponent } from './pages/password-reset-request-page/password-reset-request-page.component';
 import { SignupPageComponent } from './pages/signup-page/signup-page.component';
+import { ActivationPendingPageComponent } from './pages/activation-pending-page/activation-pending-page.component';
+import { ActivationConfirmPageComponent } from './pages/activation-confirm-page/activation-confirm-page.component';
 
 @NgModule({
   declarations: [
@@ -13,6 +15,8 @@ import { SignupPageComponent } from './pages/signup-page/signup-page.component';
     SignupPageComponent,
     PasswordResetRequestPageComponent,
     PasswordResetConfirmPageComponent,
+    ActivationPendingPageComponent,
+    ActivationConfirmPageComponent,
   ],
   imports: [SharedModule, AuthRoutingModule],
 })

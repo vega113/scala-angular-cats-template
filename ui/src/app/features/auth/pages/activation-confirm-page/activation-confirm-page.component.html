@@ -1,0 +1,29 @@
+<section class="activation-confirm">
+  <header class="activation-confirm__header">
+    <h1>Confirming Activation</h1>
+    @if (email()) {
+      <p>Account email: <strong>{{ email() }}</strong></p>
+    }
+  </header>
+
+  <div class="activation-confirm__body">
+    @if (isLoading()) {
+      <div class="activation-confirm__status activation-confirm__status--loading">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>{{ message() }}</p>
+      </div>
+    } @else if (isSuccess()) {
+      <div class="activation-confirm__status activation-confirm__status--success">
+        <span aria-hidden="true">✅</span>
+        <p>{{ message() }}</p>
+        <button type="button" (click)="skipToTodos()">Go to todos now</button>
+      </div>
+    } @else {
+      <div class="activation-confirm__status activation-confirm__status--error">
+        <span aria-hidden="true">⚠️</span>
+        <p>{{ message() }}</p>
+        <button type="button" (click)="retry()">Back to login</button>
+      </div>
+    }
+  </div>
+</section>

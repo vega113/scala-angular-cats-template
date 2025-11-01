@@ -5,10 +5,12 @@ import { Observable, map } from 'rxjs';
 import {
   AuthResponse,
   AuthUser,
+  SignupResponse,
   LoginRequest,
   PasswordResetConfirmPayload,
   PasswordResetRequestPayload,
   SignupRequest,
+  ActivationConfirmPayload,
 } from '../models/auth.model';
 
 interface AuthResponseDto {
@@ -17,6 +19,11 @@ interface AuthResponseDto {
     id: string;
     email: string;
   };
+}
+
+interface SignupResponseDto {
+  status: string;
+  message: string;
 }
 
 interface PasswordResetResponseDto {
@@ -28,10 +35,10 @@ export class AuthApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/auth';
 
-  signup(payload: SignupRequest): Observable<AuthResponse> {
+  signup(payload: SignupRequest): Observable<SignupResponse> {
     return this.http
-      .post<AuthResponseDto>(`${this.baseUrl}/signup`, payload)
-      .pipe(map(mapAuthResponse));
+      .post<SignupResponseDto>(`${this.baseUrl}/signup`, payload)
+      .pipe(map(mapSignupResponse));
   }
 
   login(payload: LoginRequest): Observable<AuthResponse> {
@@ -57,6 +64,12 @@ export class AuthApiService {
       .post<void>(`${this.baseUrl}/password-reset/confirm`, payload)
       .pipe(map(() => void 0));
   }
+
+  confirmActivation(payload: ActivationConfirmPayload): Observable<AuthResponse> {
+    return this.http
+      .post<AuthResponseDto>(`${this.baseUrl}/activation/confirm`, payload)
+      .pipe(map(mapAuthResponse));
+  }
 }
 
 function mapAuthResponse(dto: AuthResponseDto): AuthResponse {
@@ -66,5 +79,12 @@ function mapAuthResponse(dto: AuthResponseDto): AuthResponse {
       id: dto.user.id,
       email: dto.user.email,
     },
+  };
+}
+
+function mapSignupResponse(dto: SignupResponseDto): SignupResponse {
+  return {
+    status: dto.status as SignupResponse['status'],
+    message: dto.message,
   };
 }

@@ -1,0 +1,31 @@
+<section class="activation-pending">
+  <header class="activation-pending__header">
+    <h1>Activate Your Account</h1>
+    <p>Thanks for signing up! Before you can use the app, please confirm your email address.</p>
+  </header>
+
+  <div class="activation-pending__content">
+    @if (email()) {
+      <p>
+        We sent an activation link to
+        <strong>{{ email() }}</strong>. Open the link on this device to finish activation.
+      </p>
+    } @else {
+      <p>
+        We just sent an activation email. If you don't see it, check your spam folder or request a new
+        link below.
+      </p>
+    }
+
+    <ul class="activation-pending__tips">
+      <li>It can take a couple of minutes for the email to arrive.</li>
+      <li>Can't find it? Try searching for "Activate your account".</li>
+      <li>Still stuck? Request another activation email from the login page.</li>
+    </ul>
+
+    <div class="activation-pending__actions">
+      <button type="button" (click)="goToLogin()">Back to Login</button>
+      <button type="button" class="ghost" (click)="goToSignup()">Use a different email</button>
+    </div>
+  </div>
+</section>

@@ -32,9 +32,19 @@ export class LoginPageComponent {
     }
 
     this.errorSignal.set(null);
-    this.authService.login(this.form.getRawValue()).subscribe({
+    const credentials = this.form.getRawValue();
+    const normalizedEmail = credentials.email.trim().toLowerCase();
+
+    this.authService.login(credentials).subscribe({
       next: () => this.router.navigate(['/todos']),
-      error: (error: unknown) => this.errorSignal.set(extractErrorMessage(error)),
+      error: (error: unknown) => {
+        if (isAccountNotActivated(error)) {
+          this.authService.setPendingActivationEmail(normalizedEmail);
+          this.router.navigate(['/auth/activate/pending']);
+          return;
+        }
+        this.errorSignal.set(extractErrorMessage(error));
+      },
     });
   }
 }
@@ -44,4 +54,12 @@ function extractErrorMessage(error: unknown): string {
     return error.error.error.message;
   }
   return 'Unable to log in. Please check your credentials and try again.';
+}
+
+function isAccountNotActivated(error: unknown): boolean {
+  return (
+    error instanceof HttpErrorResponse &&
+    error.status === 403 &&
+    error.error?.error?.code === 'account_not_activated'
+  );
 }

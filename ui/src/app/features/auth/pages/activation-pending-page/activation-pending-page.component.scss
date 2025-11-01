@@ -1,0 +1,91 @@
+.activation-pending {
+  max-width: 520px;
+  margin: 4rem auto;
+  padding: 2.5rem;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.activation-pending__header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 2rem;
+}
+
+.activation-pending__header p {
+  margin: 0;
+  color: #4b5563;
+}
+
+.activation-pending__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: #1f2937;
+}
+
+.activation-pending__content strong {
+  color: #111827;
+}
+
+.activation-pending__tips {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #4b5563;
+}
+
+.activation-pending__actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.activation-pending__actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.activation-pending__actions button:first-child {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+.activation-pending__actions button:first-child:hover {
+  background: #1d4ed8;
+}
+
+.activation-pending__actions .ghost {
+  background: transparent;
+  color: #2563eb;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.activation-pending__actions .ghost:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+@media (max-width: 600px) {
+  .activation-pending {
+    margin: 2rem 1rem;
+    padding: 2rem;
+  }
+
+  .activation-pending__actions {
+    flex-direction: column;
+  }
+
+  .activation-pending__actions button {
+    width: 100%;
+  }
+}
