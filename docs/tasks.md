@@ -207,13 +207,18 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-1101 | 🟡 | Error taxonomy + mapping (400/401/403/404/422/500) | 1h | T-202 |
-| T-1102 | 🟡 | Timeouts + limits (server/client/DB) | 1h | T-201, T-302 |
-| T-1103 | 🟡 | Connection pool sizing (HikariCP) | 0.5h | T-302 |
-| T-1104 | 🟡 | Rate limiting placeholder (docs) | 0.5h | T-201 |
+| T-1101 | ✅ | Error taxonomy + mapping (400/401/403/404/422/500) | 1h | T-202 |
+| T-1102 | ✅ | Timeouts + limits (server/client/DB) | 1h | T-201, T-302 |
+| T-1103 | ✅ | Connection pool sizing (HikariCP) | 0.5h | T-302 |
+| T-1104 | ✅ | Rate limiting placeholder (docs) | 0.5h | T-201 |
 
 - DoD: Central error handler; configs documented; defaults safe; guidance for scaling on Heroku dynos.
-- Agent Context: middleware/error, application.conf, docs/operations.md.
+- Agent Context: `ApiResponse`, `ErrorHandler`, `application.conf` timeouts, `docs/tech.md` (timeouts & rate limiting).
+- Notes:
+  - T-1101: Introduced `ApiResponse`/`ApiError` helpers; routes now emit consistent error codes (400/401/403/404/409/422/500) with structured JSON.
+  - T-1102: Ember server timeouts configurable (`request-header`, `idle`, `shutdown`); docs call out defaults.
+  - T-1103: Hikari pool sizing now exposes `minimumIdle` + `connectionTimeout`; Heroku env vars surfaced in README/config.
+  - T-1104: Rate limiting placeholder documented in `docs/tech.md` with recommended future approach.
 
 ---
 

@@ -69,6 +69,14 @@ For a template emphasizing pragmatic FP with rich ecosystem support and Heroku-f
 - Stack: log4cats (Slf4j) + Logback `LogstashEncoder`; MDC/structured fields flow into JSON automatically. Docs updated in README (Testing section) for smoke script usage.
 - Tracing scaffold: optional natchez `EntryPoint` wiring (`TracingMiddleware`) is disabled by default but provides a ready hook for Jaeger/OTLP/etc. Toggle via `TRACING_ENABLED=true` and swap the entry point implementation when integrating with a collector.
 
+## Timeouts & Pool Sizing
+- HTTP server: `http.request-header-timeout`, `http.idle-timeout`, and `http.shutdown-timeout` (defaults 15s/60s/10s) configure Ember’s request/idle/shutdown windows. Heroku dynos can tune these via env overrides if needed.
+- Database: HikariCP now honours `db.max-pool-size`, `db.minimum-idle`, and `db.connection-timeout` (default 30s) so we can align with Postgres plan connection limits. Values map directly to Heroku env vars (`DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`).
+
+## Rate Limiting (Placeholder)
+- No in-process throttling is enabled today; rely on upstream WAF/CDN or Heroku Shield for coarse limiting.
+- When requirements arrive, introduce a `cats-effect` token bucket (e.g., http4s `Throttle` middleware backed by Redis) and emit structured `429` logs including `requestId`/`userId` for observability.
+- Document any future limits in ops/runbooks and surface retry guidance via `Retry-After` headers.
 ## TestContainers
 - Decision: Include TestContainers for Postgres integration tests.
 - Tooling: `testcontainers-scala-postgresql` with munit + munit-cats-effect; lightweight fixtures to auto-provision container, run Flyway migrations, and expose `Transactor` to tests.
