@@ -70,6 +70,9 @@ object Server:
         .default[IO]
         .withHost(ipv4"0.0.0.0")
         .withPort(Port.fromInt(cfg.http.port).getOrElse(port"8080"))
+        .withRequestHeaderReceiveTimeout(cfg.http.requestHeaderTimeout)
+        .withIdleTimeout(cfg.http.idleTimeout)
+        .withShutdownTimeout(cfg.http.shutdownTimeout)
         .withHttpApp(app)
         .build
     yield srv

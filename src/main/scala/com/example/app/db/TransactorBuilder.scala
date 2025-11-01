@@ -31,6 +31,8 @@ object TransactorBuilder:
     cfg.db.password.foreach(hc.setPassword)
     cfg.db.schema.foreach(hc.setSchema)
     hc.setMaximumPoolSize(cfg.db.maxPoolSize)
+    hc.setMinimumIdle(cfg.db.minimumIdle)
+    hc.setConnectionTimeout(cfg.db.connectionTimeout.toMillis)
     hc.setDriverClassName(DriverClass)
     hc
 

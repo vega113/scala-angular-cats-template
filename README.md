@@ -56,6 +56,8 @@ Environment variables (see docs/requirements.md for full list):
 - `DATABASE_URL` (Heroku-style)
 - `JWT_SECRET`, `JWT_TTL`
 - `LOG_LEVEL` (JSON logs)
+- `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`
+- `TRACING_ENABLED` (optional natchez scaffold)
 
 ## Testing
 - Backend unit/integration: `sbt test`
