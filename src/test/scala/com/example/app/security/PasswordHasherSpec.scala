@@ -10,7 +10,7 @@ class PasswordHasherSpec extends CatsEffectSuite:
     val plain = "s3cr3t"
     for
       hash <- hasher.hash(plain)
-      ok   <- hasher.verify(plain, hash)
+      ok <- hasher.verify(plain, hash)
     yield assert(ok)
   }
 
@@ -18,6 +18,6 @@ class PasswordHasherSpec extends CatsEffectSuite:
     val plain = "s3cr3t"
     for
       hash <- hasher.hash(plain)
-      ok   <- hasher.verify("other", hash)
+      ok <- hasher.verify("other", hash)
     yield assert(!ok)
   }

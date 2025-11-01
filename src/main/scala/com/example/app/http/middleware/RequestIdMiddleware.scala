@@ -12,7 +12,8 @@ object RequestIdMiddleware:
 
   def apply(app: HttpApp[IO]): HttpApp[IO] =
     Kleisli { (req: Request[IO]) =>
-      val reqId = req.headers.get(HeaderName).map(_.head.value).getOrElse(UUID.randomUUID().toString)
+      val reqId =
+        req.headers.get(HeaderName).map(_.head.value).getOrElse(UUID.randomUUID().toString)
       val reqWithId = req.putHeaders(Header.Raw(HeaderName, reqId))
       app(reqWithId).map(_.putHeaders(Header.Raw(HeaderName, reqId)))
     }

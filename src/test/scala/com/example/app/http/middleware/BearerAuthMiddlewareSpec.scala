@@ -17,8 +17,10 @@ class BearerAuthMiddlewareSpec extends CatsEffectSuite {
   private val payload = JwtPayload(UUID.randomUUID(), "user@example.com")
 
   private val authService = new AuthService[IO] {
-    override def signup(email: String, password: String): IO[AuthResult] = IO.raiseError(new NotImplementedError)
-    override def login(email: String, password: String): IO[AuthResult] = IO.raiseError(new NotImplementedError)
+    override def signup(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
+    override def login(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
     override def currentUser(userId: UUID): IO[Option[User]] = IO.pure(None)
     override def authenticate(token: String): IO[Option[JwtPayload]] =
       if (token == validToken) IO.pure(Some(payload)) else IO.pure(None)
@@ -33,18 +35,23 @@ class BearerAuthMiddlewareSpec extends CatsEffectSuite {
   private val service = middleware(authedRoutes)
 
   test("allows request with valid token") {
-    val req = Request[IO](GET, uri"/protected").putHeaders(headers.Authorization(Credentials.Token(AuthScheme.Bearer, validToken)))
+    val req = Request[IO](GET, uri"/protected").putHeaders(
+      headers.Authorization(Credentials.Token(AuthScheme.Bearer, validToken))
+    )
     service.run(req).value.flatMap {
-      case Some(resp) => resp.as[String].map(body => assertEquals((resp.status, body), (Status.Ok, payload.email)))
-      case None       => fail("expected response")
+      case Some(resp) =>
+        resp.as[String].map(body => assertEquals((resp.status, body), (Status.Ok, payload.email)))
+      case None => fail("expected response")
     }
   }
 
   test("rejects request with invalid token") {
-    val req = Request[IO](GET, uri"/protected").putHeaders(headers.Authorization(Credentials.Token(AuthScheme.Bearer, "bad")))
+    val req = Request[IO](GET, uri"/protected").putHeaders(
+      headers.Authorization(Credentials.Token(AuthScheme.Bearer, "bad"))
+    )
     service.run(req).value.flatMap {
       case Some(resp) => IO(assertEquals(resp.status, Status.Unauthorized))
-      case None       => fail("expected response")
+      case None => fail("expected response")
     }
   }
 
@@ -52,7 +59,7 @@ class BearerAuthMiddlewareSpec extends CatsEffectSuite {
     val req = Request[IO](GET, uri"/protected")
     service.run(req).value.flatMap {
       case Some(resp) => IO(assertEquals(resp.status, Status.Unauthorized))
-      case None       => fail("expected response")
+      case None => fail("expected response")
     }
   }
 }

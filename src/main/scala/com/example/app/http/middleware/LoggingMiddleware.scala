@@ -11,35 +11,35 @@ import scala.concurrent.duration.FiniteDuration
 
 object LoggingMiddleware:
   private val RequestIdHeader = CIString("X-Request-Id")
-  private val UserIdHeader    = CIString("X-User-Id")
+  private val UserIdHeader = CIString("X-User-Id")
 
   def apply(app: HttpApp[IO]): HttpApp[IO] = Kleisli { (req: Request[IO]) =>
     for
-      logger   <- Slf4jLogger.create[IO]
-      rid       = headerOrFallback(req.headers, RequestIdHeader)
-      start    <- IO.realTime
-      _        <- logger.info(
-                    Map(
-                      "event" -> "request.start",
-                      "method" -> req.method.name,
-                      "path" -> req.uri.path.renderString,
-                      "requestId" -> rid
-                    )
-                  )(s"${req.method.name} ${req.uri}")
-      res      <- app(req)
+      logger <- Slf4jLogger.create[IO]
+      rid = headerOrFallback(req.headers, RequestIdHeader)
+      start <- IO.realTime
+      _ <- logger.info(
+        Map(
+          "event" -> "request.start",
+          "method" -> req.method.name,
+          "path" -> req.uri.path.renderString,
+          "requestId" -> rid
+        )
+      )(s"${req.method.name} ${req.uri}")
+      res <- app(req)
       duration <- IO.realTime.map(_ - start)
-      userId    = headerOrFallback(res.headers, UserIdHeader)
-      _        <- logger.info(
-                    Map(
-                      "event" -> "request.finish",
-                      "method" -> req.method.name,
-                      "path" -> req.uri.path.renderString,
-                      "status" -> res.status.code.toString,
-                      "requestId" -> rid,
-                      "userId" -> userId,
-                      "latencyMs" -> millis(duration)
-                    )
-                  )(s"${res.status.code} ${req.method.name} ${req.uri}")
+      userId = headerOrFallback(res.headers, UserIdHeader)
+      _ <- logger.info(
+        Map(
+          "event" -> "request.finish",
+          "method" -> req.method.name,
+          "path" -> req.uri.path.renderString,
+          "status" -> res.status.code.toString,
+          "requestId" -> rid,
+          "userId" -> userId,
+          "latencyMs" -> millis(duration)
+        )
+      )(s"${res.status.code} ${req.method.name} ${req.uri}")
     yield res
   }
 

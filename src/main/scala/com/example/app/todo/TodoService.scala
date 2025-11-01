@@ -26,7 +26,12 @@ object TodoService {
         if (input.title.trim.isEmpty) F.raiseError(new IllegalArgumentException("title_required"))
         else repo.create(userId, input.copy(title = input.title.trim))
 
-      override def list(userId: UUID, completed: Option[Boolean], limit: Int, offset: Int): F[List[Todo]] =
+      override def list(
+        userId: UUID,
+        completed: Option[Boolean],
+        limit: Int,
+        offset: Int
+      ): F[List[Todo]] =
         repo.list(userId, completed, limit = math.max(limit, 1), offset = math.max(offset, 0))
 
       override def get(userId: UUID, id: UUID): F[Option[Todo]] =
@@ -36,12 +41,12 @@ object TodoService {
         val sanitized = update.copy(title = update.title.map(_.trim).filter(_.nonEmpty))
         repo.update(userId, id, sanitized).flatMap {
           case Some(todo) => F.pure(todo)
-          case None       => F.raiseError(TodoError.NotFound)
+          case None => F.raiseError(TodoError.NotFound)
         }
 
       override def delete(userId: UUID, id: UUID): F[Unit] =
         repo.delete(userId, id).flatMap {
-          case true  => F.unit
+          case true => F.unit
           case false => F.raiseError(TodoError.NotFound)
         }
     }

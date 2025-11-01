@@ -31,9 +31,16 @@ class TodoServiceSpec extends CatsEffectSuite:
   test("update returns not found when todo missing") {
     inMemoryRepo.flatMap { case (repo, _) =>
       val service = TodoService[IO](repo)
-      service.update(userId, UUID.randomUUID(), TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)).attempt.map { res =>
-        assertEquals(res.left.map(_.getClass), Left(classOf[TodoError.NotFound.type]))
-      }
+      service
+        .update(
+          userId,
+          UUID.randomUUID(),
+          TodoUpdate(None, FieldPatch.Unchanged, FieldPatch.Unchanged, None)
+        )
+        .attempt
+        .map { res =>
+          assertEquals(res.left.map(_.getClass), Left(classOf[TodoError.NotFound.type]))
+        }
     }
   }
 
@@ -49,7 +56,12 @@ class TodoServiceSpec extends CatsEffectSuite:
     override def get(userId: UUID, id: UUID): IO[Option[Todo]] =
       ref.get.map(_.get(id).filter(_.userId == userId))
 
-    override def list(userId: UUID, completed: Option[Boolean], limit: Int, offset: Int): IO[List[Todo]] =
+    override def list(
+      userId: UUID,
+      completed: Option[Boolean],
+      limit: Int,
+      offset: Int
+    ): IO[List[Todo]] =
       ref.get.map(_.values.filter(_.userId == userId).toList)
 
     override def update(userId: UUID, id: UUID, update: TodoUpdate): IO[Option[Todo]] =
@@ -58,14 +70,16 @@ class TodoServiceSpec extends CatsEffectSuite:
           case Some(todo) =>
             val updated = todo.copy(
               title = update.title.getOrElse(todo.title),
-              description = update.description match
+              description = (update.description match
                 case FieldPatch.Unchanged => todo.description
                 case FieldPatch.Set(value) => Some(value)
-                case FieldPatch.Clear => None,
-              dueDate = update.dueDate match
+                case FieldPatch.Clear => None
+              ),
+              dueDate = (update.dueDate match
                 case FieldPatch.Unchanged => todo.dueDate
                 case FieldPatch.Set(value) => Some(value)
-                case FieldPatch.Clear => None,
+                case FieldPatch.Clear => None
+              ),
               completed = update.completed.getOrElse(todo.completed),
               updatedAt = Instant.parse("2024-01-01T00:00:00Z")
             )

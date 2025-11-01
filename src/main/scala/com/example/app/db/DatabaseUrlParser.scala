@@ -20,7 +20,12 @@ object DatabaseUrlParser:
           case None => config
       case None => config
 
-  private case class Parsed(jdbcUrl: String, user: Option[String], password: Option[String], schema: Option[String])
+  private case class Parsed(
+    jdbcUrl: String,
+    user: Option[String],
+    password: Option[String],
+    schema: Option[String]
+  )
 
   private def parse(url: String): Option[Parsed] =
     val lower = url.toLowerCase
@@ -43,7 +48,8 @@ object DatabaseUrlParser:
       case Some(info) =>
         val parts = info.split(":", 2)
         val user = Option(parts.headOption.getOrElse("")).filter(_.nonEmpty).map(decode)
-        val pass = if parts.length > 1 then Option(parts(1)).filter(_.nonEmpty).map(decode) else None
+        val pass =
+          if parts.length > 1 then Option(parts(1)).filter(_.nonEmpty).map(decode) else None
         (user, pass)
       case None => (None, None)
 
@@ -52,8 +58,8 @@ object DatabaseUrlParser:
       .map(_.split('&').toList.flatMap { kv =>
         kv.split("=", 2) match
           case Array(k, v) => Some(k -> decode(v))
-          case Array(k)    => Some(k -> "")
-          case _           => None
+          case Array(k) => Some(k -> "")
+          case _ => None
       }.toMap)
       .getOrElse(Map.empty)
 

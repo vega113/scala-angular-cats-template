@@ -15,8 +15,9 @@ object BearerAuthMiddleware {
 
     val authenticate: Kleisli[OptionTIO, Request[IO], AuthUser] = Kleisli { req =>
       OptionT.liftF(IO.pure(TokenExtractor.bearerToken(req))).flatMapF {
-        case Some(token) => authService.authenticate(token).map(_.map(p => AuthUser(p.userId, p.email)))
-        case None        => IO.pure(None)
+        case Some(token) =>
+          authService.authenticate(token).map(_.map(p => AuthUser(p.userId, p.email)))
+        case None => IO.pure(None)
       }
     }
 

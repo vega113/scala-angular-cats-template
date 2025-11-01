@@ -11,20 +11,22 @@ import com.example.app.todo.TodoRepository
 import doobie.hikari.HikariTransactor
 
 final case class AppResources(
-    transactor: HikariTransactor[IO],
-    passwordHasher: PasswordHasher[IO],
-    userRepository: UserRepository[IO],
-    jwtService: JwtService[IO],
-    todoRepository: TodoRepository[IO]
+  transactor: HikariTransactor[IO],
+  passwordHasher: PasswordHasher[IO],
+  userRepository: UserRepository[IO],
+  jwtService: JwtService[IO],
+  todoRepository: TodoRepository[IO]
 )
 
 object AppResources {
   def make(cfg: AppConfig): Resource[IO, AppResources] =
     for
       xaOpt <- TransactorBuilder.optional(cfg)
-      xa    <- Resource.eval(IO.fromOption(xaOpt)(new IllegalStateException("Database not configured")))
-      jwt    <- Resource.eval(JwtService[IO](cfg.jwt))
-      hasher  = PasswordHasher.bcrypt[IO]()
+      xa <- Resource.eval(
+        IO.fromOption(xaOpt)(new IllegalStateException("Database not configured"))
+      )
+      jwt <- Resource.eval(JwtService[IO](cfg.jwt))
+      hasher = PasswordHasher.bcrypt[IO]()
       userRepo = UserRepository.doobie[IO](xa)
       todoRepo = TodoRepository.doobie[IO](xa)
     yield AppResources(xa, hasher, userRepo, jwt, todoRepo)

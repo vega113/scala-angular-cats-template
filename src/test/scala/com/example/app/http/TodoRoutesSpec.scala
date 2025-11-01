@@ -27,7 +27,8 @@ import java.time.Instant
 import java.util.UUID
 
 class TodoRoutesSpec extends CatsEffectSuite:
-  private val user = AuthUser(UUID.fromString("00000000-0000-0000-0000-000000000001"), "user@example.com")
+  private val user =
+    AuthUser(UUID.fromString("00000000-0000-0000-0000-000000000001"), "user@example.com")
   private val baseUri = uri"/api/todos"
   private type OptionTIO[A] = OptionT[IO, A]
   private given Logger[IO] = NoOpLogger[IO]
@@ -48,10 +49,10 @@ class TodoRoutesSpec extends CatsEffectSuite:
     withApp() { (app, _) =>
       for
         created1 <- createTodo(app, "One")
-        _        <- createTodo(app, "Two")
+        _ <- createTodo(app, "Two")
         updateResp <- updateTodo(app, created1.id, Json.obj("completed" -> Json.True))
         _ = assertEquals(updateResp.status, Status.Ok)
-        listed   <- app.run(Request[IO](GET, uri"/api/todos?completed=true&limit=999&offset=-5"))
+        listed <- app.run(Request[IO](GET, uri"/api/todos?completed=true&limit=999&offset=-5"))
         _ = assertEquals(listed.status, Status.Ok)
         todos <- listed.as[List[Todo]]
       yield
@@ -64,7 +65,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
     withApp() { (app, _) =>
       for
         created <- createTodo(app, "With Desc", description = Some("desc"))
-        resp    <- updateTodo(app, created.id, Json.obj("description" -> Json.Null))
+        resp <- updateTodo(app, created.id, Json.obj("description" -> Json.Null))
         _ = assertEquals(resp.status, Status.Ok)
         updated <- resp.as[Todo]
       yield assertEquals(updated.description, None)
@@ -73,7 +74,7 @@ class TodoRoutesSpec extends CatsEffectSuite:
   test("toggle flips completion state"):
     withApp() { (app, _) =>
       for
-        created  <- createTodo(app, "Toggle me")
+        created <- createTodo(app, "Toggle me")
         toggled1 <- app.run(Request[IO](PATCH, baseUri / created.id.toString / "toggle"))
         _ = assertEquals(toggled1.status, Status.Ok)
         todo1 <- toggled1.as[Todo]
@@ -135,19 +136,23 @@ class TodoRoutesSpec extends CatsEffectSuite:
     Kleisli(_ => OptionT.pure[IO](user))
 
   private def withApp[A](
-      todoConfig: TodoConfig = defaultConfig,
-      authenticator: Kleisli[OptionTIO, Request[IO], AuthUser] = defaultAuthenticator
+    todoConfig: TodoConfig = defaultConfig,
+    authenticator: Kleisli[OptionTIO, Request[IO], AuthUser] = defaultAuthenticator
   )(f: (HttpApp[IO], Ref[IO, Map[UUID, Todo]]) => IO[A]): IO[A] =
     Ref.of[IO, Map[UUID, Todo]](Map.empty).flatMap { ref =>
-      val repo       = new InMemoryTodoRepository(ref)
-      val service    = TodoService[IO](repo)
-      val routes     = new TodoRoutes(service, todoConfig)
+      val repo = new InMemoryTodoRepository(ref)
+      val service = TodoService[IO](repo)
+      val routes = new TodoRoutes(service, todoConfig)
       val middleware = AuthMiddleware(authenticator)
       val app = Router("/api/todos" -> middleware(routes.authedRoutes)).orNotFound
       f(app, ref)
     }
 
-  private def createTodo(app: HttpApp[IO], title: String, description: Option[String] = None): IO[Todo] =
+  private def createTodo(
+    app: HttpApp[IO],
+    title: String,
+    description: Option[String] = None
+  ): IO[Todo] =
     val baseFields = List("title" -> title.asJson)
     val fields = description.fold(baseFields)(desc => baseFields :+ ("description" -> desc.asJson))
     for
@@ -162,24 +167,39 @@ class TodoRoutesSpec extends CatsEffectSuite:
   private def errorCode(json: Json): Option[String] =
     json.hcursor.downField("error").get[String]("code").toOption
 
-  private final class InMemoryTodoRepository(ref: Ref[IO, Map[UUID, Todo]]) extends TodoRepository[IO]:
+  private final class InMemoryTodoRepository(ref: Ref[IO, Map[UUID, Todo]])
+      extends TodoRepository[IO]:
     override def create(userId: UUID, create: TodoCreate): IO[Todo] =
       for
-        id  <- IO(UUID.randomUUID())
+        id <- IO(UUID.randomUUID())
         now <- IO.realTimeInstant
-        todo = Todo(id, userId, create.title, create.description, create.dueDate, completed = false, createdAt = now, updatedAt = now)
-        _   <- ref.update(_ + (id -> todo))
+        todo = Todo(
+          id,
+          userId,
+          create.title,
+          create.description,
+          create.dueDate,
+          completed = false,
+          createdAt = now,
+          updatedAt = now
+        )
+        _ <- ref.update(_ + (id -> todo))
       yield todo
 
     override def get(userId: UUID, id: UUID): IO[Option[Todo]] =
       ref.get.map(_.get(id).filter(_.userId == userId))
 
-    override def list(userId: UUID, completed: Option[Boolean], limit: Int, offset: Int): IO[List[Todo]] =
+    override def list(
+      userId: UUID,
+      completed: Option[Boolean],
+      limit: Int,
+      offset: Int
+    ): IO[List[Todo]] =
       ref.get.map { state =>
         val filtered = state.values.filter(_.userId == userId).toList
         val byStatus = completed match
           case Some(flag) => filtered.filter(_.completed == flag)
-          case None       => filtered
+          case None => filtered
         byStatus.sortBy(_.createdAt)(Ordering[Instant].reverse).drop(offset).take(limit)
       }
 
@@ -191,14 +211,16 @@ class TodoRoutesSpec extends CatsEffectSuite:
             case Some(existing) if existing.userId == userId =>
               val next = existing.copy(
                 title = update.title.getOrElse(existing.title),
-                description = update.description match
+                description = (update.description match
                   case FieldPatch.Unchanged => existing.description
                   case FieldPatch.Set(value) => Some(value)
-                  case FieldPatch.Clear      => None,
-                dueDate = update.dueDate match
+                  case FieldPatch.Clear => None
+                ),
+                dueDate = (update.dueDate match
                   case FieldPatch.Unchanged => existing.dueDate
                   case FieldPatch.Set(value) => Some(value)
-                  case FieldPatch.Clear      => None,
+                  case FieldPatch.Clear => None
+                ),
                 completed = update.completed.getOrElse(existing.completed),
                 updatedAt = now
               )

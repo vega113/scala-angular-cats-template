@@ -16,7 +16,9 @@ object Tracing:
       Resource.eval(
         for
           logger <- Slf4jLogger.create[IO]
-          _      <- logger.info("Tracing enabled (noop entry point – replace with real exporter as needed)")
+          _ <- logger.info(
+            "Tracing enabled (noop entry point – replace with real exporter as needed)"
+          )
         yield noopEntryPoint
       )
     else Resource.pure[IO, EntryPoint[IO]](noopEntryPoint)

@@ -13,7 +13,12 @@ import org.http4s.headers.Accept
 import com.example.app.config.*
 import com.example.app.auth.AuthService
 import com.example.app.http.{AuthRoutes, Routes, TodoRoutes}
-import com.example.app.http.middleware.{ErrorHandler, LoggingMiddleware, RequestIdMiddleware, BearerAuthMiddleware}
+import com.example.app.http.middleware.{
+  ErrorHandler,
+  LoggingMiddleware,
+  RequestIdMiddleware,
+  BearerAuthMiddleware
+}
 import com.example.app.todo.TodoService
 import com.example.app.tracing.{Tracing, TracingMiddleware}
 import doobie.implicits._
@@ -26,24 +31,29 @@ object Server:
       logger <- Resource.eval(Slf4jLogger.create[IO])
       readinessCheck = sql"select 1".query[Int].unique.transact(resources.transactor).void
       given Logger[IO] = logger
-      authService   = AuthService[IO](resources.userRepository, resources.passwordHasher, resources.jwtService)
-      todoService   = TodoService[IO](resources.todoRepository)
+      authService = AuthService[IO](
+        resources.userRepository,
+        resources.passwordHasher,
+        resources.jwtService
+      )
+      todoService = TodoService[IO](resources.todoRepository)
       authMiddleware = BearerAuthMiddleware(authService)
-      authRoutes    = new AuthRoutes(authService)
-      todoRoutes    = new TodoRoutes(todoService, cfg.todo)
-      routes        = new Routes(authRoutes, todoRoutes, authMiddleware, readinessCheck)
-      entryPoint   <- Tracing.entryPoint(cfg.tracing)
+      authRoutes = new AuthRoutes(authService)
+      todoRoutes = new TodoRoutes(todoService, cfg.todo)
+      routes = new Routes(authRoutes, todoRoutes, authMiddleware, readinessCheck)
+      entryPoint <- Tracing.entryPoint(cfg.tracing)
       staticRoutes =
         if cfg.angular.mode == "dev" then HttpRoutes.empty[IO]
         else resourceServiceBuilder[IO]("static").toRoutes
       spaFallback =
         if cfg.angular.mode == "dev" then HttpRoutes.empty[IO]
-        else HttpRoutes.of[IO] {
-          case req @ GET -> _ if shouldServeSpa(req) =>
-            StaticFile
-              .fromResource("static/index.html", Some(req))
-              .getOrElseF(NotFound())
-        }
+        else
+          HttpRoutes.of[IO] {
+            case req @ GET -> _ if shouldServeSpa(req) =>
+              StaticFile
+                .fromResource("static/index.html", Some(req))
+                .getOrElseF(NotFound())
+          }
       combinedApp = (routes.routes <+> staticRoutes <+> spaFallback).orNotFound
       corsApp =
         if (cfg.angular.mode == "dev")
@@ -52,15 +62,16 @@ object Server:
             .withAllowOriginAll(combinedApp)
         else combinedApp
       requestTracked = RequestIdMiddleware(corsApp)
-      tracedApp      = TracingMiddleware(entryPoint, cfg.tracing.enabled)(requestTracked)
-      loggedApp      = LoggingMiddleware(tracedApp)
-      app            = ErrorHandler(loggedApp)
-      _      <- Resource.eval(logger.info(s"Starting HTTP server on port ${cfg.http.port}"))
-      srv    <- EmberServerBuilder.default[IO]
-                  .withHost(ipv4"0.0.0.0")
-                  .withPort(Port.fromInt(cfg.http.port).getOrElse(port"8080"))
-                  .withHttpApp(app)
-                  .build
+      tracedApp = TracingMiddleware(entryPoint, cfg.tracing.enabled)(requestTracked)
+      loggedApp = LoggingMiddleware(tracedApp)
+      app = ErrorHandler(loggedApp)
+      _ <- Resource.eval(logger.info(s"Starting HTTP server on port ${cfg.http.port}"))
+      srv <- EmberServerBuilder
+        .default[IO]
+        .withHost(ipv4"0.0.0.0")
+        .withPort(Port.fromInt(cfg.http.port).getOrElse(port"8080"))
+        .withHttpApp(app)
+        .build
     yield srv
 
   private def shouldServeSpa(req: Request[IO]): Boolean =
@@ -69,7 +80,7 @@ object Server:
       acceptsHtmlOrMissing(req)
 
   private def acceptsHtmlOrMissing(req: Request[IO]): Boolean =
-      req.headers
-        .get[Accept]
-        .map(_.values.exists(_.mediaRange.satisfiedBy(MediaType.text.html)))
+    req.headers
+      .get[Accept]
+      .map(_.values.exists(_.mediaRange.satisfiedBy(MediaType.text.html)))
       .getOrElse(true)

@@ -18,29 +18,31 @@ object UserRepository {
   def doobie[F[_]: Async](xa: Transactor[F]): UserRepository[F] =
     new DoobieUserRepository[F](xa)
 
-  private final class DoobieUserRepository[F[_]: Async](xa: Transactor[F]) extends UserRepository[F] {
+  private final class DoobieUserRepository[F[_]: Async](xa: Transactor[F])
+      extends UserRepository[F] {
     private def nowF: F[Instant] = Async[F].realTimeInstant
 
     override def create(email: String, passwordHash: String): F[User] =
       for
-        id  <- Async[F].delay(UUID.randomUUID())
+        id <- Async[F].delay(UUID.randomUUID())
         now <- nowF
         user = User(id, email, passwordHash, now, now)
-        _   <- sql"INSERT INTO users(id, email, password_hash, created_at, updated_at) VALUES ($id, $email, $passwordHash, $now, $now)"
-                .update
-                .run
-                .transact(xa)
-                .void
+        _ <-
+          sql"INSERT INTO users(id, email, password_hash, created_at, updated_at) VALUES ($id, $email, $passwordHash, $now, $now)".update.run
+            .transact(xa)
+            .void
       yield user
 
     override def findByEmail(email: String): F[Option[User]] =
-      selectUser(sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE email = $email")
-        .option
+      selectUser(
+        sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE email = $email"
+      ).option
         .transact(xa)
 
     override def findById(id: UUID): F[Option[User]] =
-      selectUser(sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE id = $id")
-        .option
+      selectUser(
+        sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE id = $id"
+      ).option
         .transact(xa)
 
     private def selectUser(query: Fragment): Query0[User] =

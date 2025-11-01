@@ -12,7 +12,7 @@ class JwtServiceSpec extends CatsEffectSuite:
     for
       service <- JwtService[IO](config)
       payload = JwtPayload(UUID.randomUUID(), "user@example.com")
-      token   <- service.generate(payload)
+      token <- service.generate(payload)
       decoded <- service.verify(token)
     yield assertEquals(decoded, Some(payload))
   }

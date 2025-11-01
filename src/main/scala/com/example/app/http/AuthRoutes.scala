@@ -20,25 +20,27 @@ final class AuthRoutes(authService: AuthService[IO]) {
       signup(req)
     case req @ POST -> Root / "login" =>
       login(req)
-    case req @ GET  -> Root / "me"    =>
+    case req @ GET -> Root / "me" =>
       me(req)
   }
 
   private def signup(req: Request[IO]): IO[Response[IO]] =
     req.as[SignupRequest].flatMap { body =>
       authService.signup(body.email, body.password).attempt.flatMap {
-        case Right(result)         => jsonResponse(Status.Created, result.asJson)
-        case Left(err: AuthError)  => authErrorResponse(err)
-        case Left(other)           => jsonResponse(Status.InternalServerError, errorBody("signup_failed", other.getMessage))
+        case Right(result) => jsonResponse(Status.Created, result.asJson)
+        case Left(err: AuthError) => authErrorResponse(err)
+        case Left(other) =>
+          jsonResponse(Status.InternalServerError, errorBody("signup_failed", other.getMessage))
       }
     }
 
   private def login(req: Request[IO]): IO[Response[IO]] =
     req.as[LoginRequest].flatMap { body =>
       authService.login(body.email, body.password).attempt.flatMap {
-        case Right(result)         => jsonResponse(Status.Ok, result.asJson)
-        case Left(err: AuthError)  => authErrorResponse(err)
-        case Left(other)           => jsonResponse(Status.InternalServerError, errorBody("login_failed", other.getMessage))
+        case Right(result) => jsonResponse(Status.Ok, result.asJson)
+        case Left(err: AuthError) => authErrorResponse(err)
+        case Left(other) =>
+          jsonResponse(Status.InternalServerError, errorBody("login_failed", other.getMessage))
       }
     }
 
@@ -49,19 +51,27 @@ final class AuthRoutes(authService: AuthService[IO]) {
           case Some(JwtPayload(userId, _)) =>
             authService.currentUser(userId).flatMap {
               case Some(user) => jsonResponse(Status.Ok, UserResponse.from(user).asJson)
-              case None       => jsonResponse(Status.NotFound, errorBody("user_not_found", "User not found"))
+              case None =>
+                jsonResponse(Status.NotFound, errorBody("user_not_found", "User not found"))
             }
-          case None => jsonResponse(Status.Unauthorized, errorBody("invalid_token", "Invalid or expired token"))
+          case None =>
+            jsonResponse(
+              Status.Unauthorized,
+              errorBody("invalid_token", "Invalid or expired token")
+            )
         }
-      case None => jsonResponse(Status.Unauthorized, errorBody("missing_token", "Authorization token missing"))
+      case None =>
+        jsonResponse(Status.Unauthorized, errorBody("missing_token", "Authorization token missing"))
     }
 
   private def extractToken(req: Request[IO]): IO[Option[String]] =
     IO.pure(TokenExtractor.bearerToken(req))
 
   private def authErrorResponse(err: AuthError): IO[Response[IO]] = err match
-    case AuthError.EmailAlreadyExists => jsonResponse(Status.Conflict, errorBody("email_exists", "Email already registered"))
-    case AuthError.InvalidCredentials => jsonResponse(Status.Unauthorized, errorBody("invalid_credentials", "Invalid credentials"))
+    case AuthError.EmailAlreadyExists =>
+      jsonResponse(Status.Conflict, errorBody("email_exists", "Email already registered"))
+    case AuthError.InvalidCredentials =>
+      jsonResponse(Status.Unauthorized, errorBody("invalid_credentials", "Invalid credentials"))
 
   private def jsonResponse(status: Status, json: Json): IO[Response[IO]] =
     IO.pure(Response[IO](status).withEntity(json))

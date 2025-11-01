@@ -11,15 +11,16 @@ object TracingMiddleware:
 
   def apply(entryPoint: EntryPoint[IO], enabled: Boolean)(app: HttpApp[IO]): HttpApp[IO] =
     if !enabled then app
-    else Kleisli { (req: Request[IO]) =>
-      val spanName = s"${req.method.name} ${req.uri.path.renderString}"
-      entryPoint.root(spanName).use { span =>
-        val requestId = req.headers.get(RequestIdHeader).map(_.head.value).getOrElse("-")
-        span.put(
-          "http.method" -> req.method.name,
-          "http.path" -> req.uri.path.renderString,
-          "request.id" -> requestId
-        ) *> app(req)
+    else
+      Kleisli { (req: Request[IO]) =>
+        val spanName = s"${req.method.name} ${req.uri.path.renderString}"
+        entryPoint.root(spanName).use { span =>
+          val requestId = req.headers.get(RequestIdHeader).map(_.head.value).getOrElse("-")
+          span.put(
+            "http.method" -> req.method.name,
+            "http.path" -> req.uri.path.renderString,
+            "request.id" -> requestId
+          ) *> app(req)
+        }
       }
-    }
 end TracingMiddleware

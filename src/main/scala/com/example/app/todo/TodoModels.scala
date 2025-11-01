@@ -7,27 +7,27 @@ import java.time.Instant
 import java.util.UUID
 
 final case class Todo(
-    id: UUID,
-    userId: UUID,
-    title: String,
-    description: Option[String],
-    dueDate: Option[Instant],
-    completed: Boolean,
-    createdAt: Instant,
-    updatedAt: Instant
+  id: UUID,
+  userId: UUID,
+  title: String,
+  description: Option[String],
+  dueDate: Option[Instant],
+  completed: Boolean,
+  createdAt: Instant,
+  updatedAt: Instant
 )
 
 final case class TodoCreate(
-    title: String,
-    description: Option[String],
-    dueDate: Option[Instant]
+  title: String,
+  description: Option[String],
+  dueDate: Option[Instant]
 )
 
 final case class TodoUpdate(
-    title: Option[String],
-    description: FieldPatch[String],
-    dueDate: FieldPatch[Instant],
-    completed: Option[Boolean]
+  title: Option[String],
+  description: FieldPatch[String],
+  dueDate: FieldPatch[Instant],
+  completed: Option[Boolean]
 )
 
 object TodoModels {
@@ -49,22 +49,23 @@ object TodoModels {
     yield TodoUpdate(title, description, dueDate, completed)
   }
 
-  implicit val todoUpdateEncoder: Encoder.AsObject[TodoUpdate] = Encoder.AsObject.instance { update =>
-    val base = List(
-      update.title.map(t => "title" -> t.asJson),
-      update.completed.map(c => "completed" -> c.asJson)
-    ).flatten
+  implicit val todoUpdateEncoder: Encoder.AsObject[TodoUpdate] = Encoder.AsObject.instance {
+    update =>
+      val base = List(
+        update.title.map(t => "title" -> t.asJson),
+        update.completed.map(c => "completed" -> c.asJson)
+      ).flatten
 
-    val desc = update.description match
-      case FieldPatch.Unchanged => Nil
-      case FieldPatch.Set(value) => List("description" -> value.asJson)
-      case FieldPatch.Clear => List("description" -> io.circe.Json.Null)
+      val desc = update.description match
+        case FieldPatch.Unchanged => Nil
+        case FieldPatch.Set(value) => List("description" -> value.asJson)
+        case FieldPatch.Clear => List("description" -> io.circe.Json.Null)
 
-    val due = update.dueDate match
-      case FieldPatch.Unchanged => Nil
-      case FieldPatch.Set(value) => List("dueDate" -> value.asJson)
-      case FieldPatch.Clear => List("dueDate" -> io.circe.Json.Null)
+      val due = update.dueDate match
+        case FieldPatch.Unchanged => Nil
+        case FieldPatch.Set(value) => List("dueDate" -> value.asJson)
+        case FieldPatch.Clear => List("dueDate" -> io.circe.Json.Null)
 
-    JsonObject.fromIterable(base ++ desc ++ due)
+      JsonObject.fromIterable(base ++ desc ++ due)
   }
 }

@@ -9,7 +9,8 @@ trait PasswordHasher[F[_]] {
 }
 
 object PasswordHasher {
-  private val fallbackHash = "$2a$10$7EqJtq98hPqEX7fNZaFWo.QaEmbrUPO/8u6U/NhOgrn0H0m7pO5lK" // hash for "password"
+  private val fallbackHash =
+    "$2a$10$7EqJtq98hPqEX7fNZaFWo.QaEmbrUPO/8u6U/NhOgrn0H0m7pO5lK" // hash for "password"
 
   def bcrypt[F[_]: Sync](logRounds: Int = 10): PasswordHasher[F] =
     new PasswordHasher[F] {

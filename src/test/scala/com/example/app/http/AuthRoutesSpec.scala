@@ -20,7 +20,8 @@ import java.util.UUID
 
 class AuthRoutesSpec extends CatsEffectSuite {
   private val passwordHasher = PasswordHasher.bcrypt[IO]()
-  private val jwtService     = JwtService[IO](JwtConfig(secret = Some("test-secret"), ttl = 3600)).unsafeRunSync()
+  private val jwtService =
+    JwtService[IO](JwtConfig(secret = Some("test-secret"), ttl = 3600)).unsafeRunSync()
 
   private def setupRoutes: IO[(AuthRoutes, InMemoryUserRepo)] =
     for
@@ -31,10 +32,12 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   test("signup returns token and user") {
     setupRoutes.flatMap { case (routes, _) =>
-      val request = Request[IO](POST, uri"/signup").withEntity(Json.obj(
-        "email" -> Json.fromString("user@example.com"),
-        "password" -> Json.fromString("secret")
-      ))
+      val request = Request[IO](POST, uri"/signup").withEntity(
+        Json.obj(
+          "email" -> Json.fromString("user@example.com"),
+          "password" -> Json.fromString("secret")
+        )
+      )
 
       routes.routes.run(request).value.flatMap {
         case Some(response) =>
@@ -49,12 +52,17 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   test("signup rejects duplicate email (case-insensitive)") {
     setupRoutes.flatMap { case (routes, _) =>
-      val payload = Json.obj("email" -> Json.fromString("dup@example.com"), "password" -> Json.fromString("secret"))
-      val request = Request[IO](POST, uri"/signup").withEntity(payload)
-      val second = Request[IO](POST, uri"/signup").withEntity(Json.obj(
-        "email" -> Json.fromString("DUP@EXAMPLE.COM"),
+      val payload = Json.obj(
+        "email" -> Json.fromString("dup@example.com"),
         "password" -> Json.fromString("secret")
-      ))
+      )
+      val request = Request[IO](POST, uri"/signup").withEntity(payload)
+      val second = Request[IO](POST, uri"/signup").withEntity(
+        Json.obj(
+          "email" -> Json.fromString("DUP@EXAMPLE.COM"),
+          "password" -> Json.fromString("secret")
+        )
+      )
 
       for
         _ <- routes.routes.run(request).value
@@ -63,7 +71,10 @@ class AuthRoutesSpec extends CatsEffectSuite {
         body <- response.as[Json]
       yield {
         assertEquals(response.status, Status.Conflict)
-        assertEquals(body.hcursor.downField("error").downField("code").as[String], Right("email_exists"))
+        assertEquals(
+          body.hcursor.downField("error").downField("code").as[String],
+          Right("email_exists")
+        )
       }
     }
   }
@@ -72,8 +83,12 @@ class AuthRoutesSpec extends CatsEffectSuite {
     setupRoutes.flatMap { case (routes, repo) =>
       val email = "login@example.com"
       val password = "secret"
-      val signupReq = Request[IO](POST, uri"/signup").withEntity(Json.obj("email" -> email.asJson, "password" -> password.asJson))
-      val loginReq = Request[IO](POST, uri"/login").withEntity(Json.obj("email" -> email.asJson, "password" -> password.asJson))
+      val signupReq = Request[IO](POST, uri"/signup").withEntity(
+        Json.obj("email" -> email.asJson, "password" -> password.asJson)
+      )
+      val loginReq = Request[IO](POST, uri"/login").withEntity(
+        Json.obj("email" -> email.asJson, "password" -> password.asJson)
+      )
 
       for
         _ <- routes.routes.run(signupReq).value
@@ -88,17 +103,22 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   test("login rejects unknown email with generic message") {
     setupRoutes.flatMap { case (routes, _) =>
-      val loginReq = Request[IO](POST, uri"/login").withEntity(Json.obj(
-        "email" -> "unknown@example.com".asJson,
-        "password" -> "secret".asJson
-      ))
+      val loginReq = Request[IO](POST, uri"/login").withEntity(
+        Json.obj(
+          "email" -> "unknown@example.com".asJson,
+          "password" -> "secret".asJson
+        )
+      )
 
       routes.routes.run(loginReq).value.flatMap {
         case Some(resp) =>
           for
             _ <- IO(assertEquals(resp.status, Status.Unauthorized))
             json <- resp.as[Json]
-          yield assertEquals(json.hcursor.downField("error").downField("code").as[String], Right("invalid_credentials"))
+          yield assertEquals(
+            json.hcursor.downField("error").downField("code").as[String],
+            Right("invalid_credentials")
+          )
         case None => fail("missing response")
       }
     }
@@ -108,14 +128,20 @@ class AuthRoutesSpec extends CatsEffectSuite {
     setupRoutes.flatMap { case (routes, _) =>
       val email = "me@example.com"
       val password = "secret"
-      val signupReq = Request[IO](POST, uri"/signup").withEntity(Json.obj("email" -> email.asJson, "password" -> password.asJson))
+      val signupReq = Request[IO](POST, uri"/signup").withEntity(
+        Json.obj("email" -> email.asJson, "password" -> password.asJson)
+      )
 
       for
         signupRespOpt <- routes.routes.run(signupReq).value
         signupResp <- IO.fromOption(signupRespOpt)(new RuntimeException("missing response"))
         json <- signupResp.as[Json]
         token <- IO.fromEither(json.hcursor.get[String]("token"))
-        meReq = Request[IO](GET, uri"/me").putHeaders(org.http4s.headers.Authorization(org.http4s.Credentials.Token(org.http4s.AuthScheme.Bearer, token)))
+        meReq = Request[IO](GET, uri"/me").putHeaders(
+          org.http4s.headers.Authorization(
+            org.http4s.Credentials.Token(org.http4s.AuthScheme.Bearer, token)
+          )
+        )
         meRespOpt <- routes.routes.run(meReq).value
         meResp <- IO.fromOption(meRespOpt)(new RuntimeException("missing response"))
         body <- meResp.as[Json]

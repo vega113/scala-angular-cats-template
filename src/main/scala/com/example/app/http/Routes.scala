@@ -12,10 +12,10 @@ import org.http4s.server.{AuthMiddleware, Router}
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 
 class Routes(
-    authRoutes: AuthRoutes,
-    todoRoutes: TodoRoutes,
-    authMiddleware: AuthMiddleware[IO, AuthUser],
-    readinessCheck: IO[Unit]
+  authRoutes: AuthRoutes,
+  todoRoutes: TodoRoutes,
+  authMiddleware: AuthMiddleware[IO, AuthUser],
+  readinessCheck: IO[Unit]
 ) {
   private val ops: HttpRoutes[IO] = HttpRoutes.of[IO] {
     case GET -> Root / "health" =>

@@ -26,8 +26,10 @@ class RoutesSpec extends CatsEffectSuite:
   private given Logger[IO] = NoOpLogger[IO]
 
   private val stubAuthService = new AuthService[IO] {
-    override def signup(email: String, password: String): IO[AuthResult] = IO.raiseError(new NotImplementedError)
-    override def login(email: String, password: String): IO[AuthResult] = IO.raiseError(new NotImplementedError)
+    override def signup(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
+    override def login(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
     override def currentUser(userId: UUID): IO[Option[User]] = IO.pure(None)
     override def authenticate(token: String): IO[Option[JwtPayload]] = IO.pure(None)
   }
@@ -44,28 +46,38 @@ class RoutesSpec extends CatsEffectSuite:
   )
 
   private val stubTodoService = new TodoService[IO] {
-    override def create(userId: UUID, input: TodoCreate): IO[Todo] = IO.pure(sampleTodo.copy(id = UUID.randomUUID(), userId = userId, title = input.title))
-    override def list(userId: UUID, completed: Option[Boolean], limit: Int, offset: Int): IO[List[Todo]] =
+    override def create(userId: UUID, input: TodoCreate): IO[Todo] =
+      IO.pure(sampleTodo.copy(id = UUID.randomUUID(), userId = userId, title = input.title))
+    override def list(
+      userId: UUID,
+      completed: Option[Boolean],
+      limit: Int,
+      offset: Int
+    ): IO[List[Todo]] =
       IO.pure(List(sampleTodo.copy(userId = userId)))
     override def get(userId: UUID, id: UUID): IO[Option[Todo]] =
       IO.pure(Some(sampleTodo.copy(userId = userId, id = id)))
     override def update(userId: UUID, id: UUID, update: TodoUpdate): IO[Todo] =
-      IO.pure(sampleTodo.copy(userId = userId, id = id, title = update.title.getOrElse(sampleTodo.title)))
+      IO.pure(
+        sampleTodo.copy(userId = userId, id = id, title = update.title.getOrElse(sampleTodo.title))
+      )
     override def delete(userId: UUID, id: UUID): IO[Unit] = IO.unit
   }
 
-  private val todoRoutes = new TodoRoutes(stubTodoService, TodoConfig(defaultPageSize = 20, maxPageSize = 100))
+  private val todoRoutes =
+    new TodoRoutes(stubTodoService, TodoConfig(defaultPageSize = 20, maxPageSize = 100))
 
   private def makeApp(
-      authMiddleware: AuthMiddleware[IO, AuthUser],
-      readiness: IO[Unit] = IO.unit
+    authMiddleware: AuthMiddleware[IO, AuthUser],
+    readiness: IO[Unit] = IO.unit
   ): HttpApp[IO] =
     new Routes(new AuthRoutes(stubAuthService), todoRoutes, authMiddleware, readiness).httpApp
 
   private val unauthenticatedMiddleware: AuthMiddleware[IO, AuthUser] =
     AuthMiddleware(Kleisli(_ => OptionT.none[IO, AuthUser]))
 
-  private val authenticatedUser = AuthUser(UUID.fromString("00000000-0000-0000-0000-0000000000cc"), "tester@example.com")
+  private val authenticatedUser =
+    AuthUser(UUID.fromString("00000000-0000-0000-0000-0000000000cc"), "tester@example.com")
 
   private val authenticatedMiddleware: AuthMiddleware[IO, AuthUser] =
     AuthMiddleware(Kleisli(_ => OptionT.pure[IO](authenticatedUser)))

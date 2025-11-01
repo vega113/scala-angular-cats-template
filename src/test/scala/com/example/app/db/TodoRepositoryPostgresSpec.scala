@@ -2,7 +2,16 @@ package com.example.app.db
 
 import cats.effect.{IO, Resource}
 import com.dimafeng.testcontainers.PostgreSQLContainer
-import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig, TodoConfig, TracingConfig}
+import com.example.app.config.{
+  AngularConfig,
+  AppConfig,
+  DbConfig,
+  HttpConfig,
+  JwtConfig,
+  LoggingConfig,
+  TodoConfig,
+  TracingConfig
+}
 import com.example.app.todo.{FieldPatch, TodoCreate, TodoRepository, TodoUpdate}
 import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
@@ -19,24 +28,33 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
     val cfg = configFromContainer(container())
 
     val program = for
-      _  <- MigrationRunner.migrate(cfg)
-      _  <- TransactorBuilder.optional(cfg).use {
-              case Some(xa) =>
-                val repo = TodoRepository.doobie[IO](xa)
-                val userId = UUID.randomUUID()
-                for
-                  created <- repo.create(userId, TodoCreate("Task", Some("desc"), None))
-                  _       <- repo.update(userId, created.id, TodoUpdate(title = Some("Updated"), description = FieldPatch.Clear, dueDate = FieldPatch.Unchanged, completed = Some(true)))
-                  fetched <- repo.get(userId, created.id)
-                  list    <- repo.list(userId, Some(true), limit = 10, offset = 0)
-                  deleted <- repo.delete(userId, created.id)
-                yield {
-                  assertEquals(fetched.map(_.title), Some("Updated"))
-                  assertEquals(list.map(_.id), List(created.id))
-                  assert(deleted)
-                }
-              case None => IO.raiseError(new RuntimeException("missing transactor"))
-            }
+      _ <- MigrationRunner.migrate(cfg)
+      _ <- TransactorBuilder.optional(cfg).use {
+        case Some(xa) =>
+          val repo = TodoRepository.doobie[IO](xa)
+          val userId = UUID.randomUUID()
+          for
+            created <- repo.create(userId, TodoCreate("Task", Some("desc"), None))
+            _ <- repo.update(
+              userId,
+              created.id,
+              TodoUpdate(
+                title = Some("Updated"),
+                description = FieldPatch.Clear,
+                dueDate = FieldPatch.Unchanged,
+                completed = Some(true)
+              )
+            )
+            fetched <- repo.get(userId, created.id)
+            list <- repo.list(userId, Some(true), limit = 10, offset = 0)
+            deleted <- repo.delete(userId, created.id)
+          yield {
+            assertEquals(fetched.map(_.title), Some("Updated"))
+            assertEquals(list.map(_.id), List(created.id))
+            assert(deleted)
+          }
+        case None => IO.raiseError(new RuntimeException("missing transactor"))
+      }
     yield ()
 
     program

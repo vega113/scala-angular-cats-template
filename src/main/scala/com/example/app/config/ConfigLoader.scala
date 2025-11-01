@@ -16,14 +16,14 @@ object ConfigLoader:
       .get("ANGULAR_PORT")
       .flatMap(_.trim match
         case s if s.nonEmpty => s.toIntOption
-        case _               => None
+        case _ => None
       )
     val tracingEnabled = sys.env
       .get("TRACING_ENABLED")
       .flatMap(_.trim.toLowerCase match
-        case "true"  => Some(true)
+        case "true" => Some(true)
         case "false" => Some(false)
-        case _        => None
+        case _ => None
       )
 
     val updatedAngular = cfg.angular.copy(

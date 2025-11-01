@@ -19,7 +19,9 @@ object TransactorBuilder:
             _ <- Resource.eval(logger.info(s"Hikari transactor initialized for ${redact(url)}"))
           yield Some(transactor)
         case None =>
-          Resource.eval(logger.warn("DATABASE_URL not set; skipping transactor creation")).map(_ => None)
+          Resource
+            .eval(logger.warn("DATABASE_URL not set; skipping transactor creation"))
+            .map(_ => None)
     }
 
   private def hikariConfig(cfg: AppConfig, url: String): HikariConfig =

@@ -47,7 +47,9 @@ class AuthServiceSpec extends CatsEffectSuite:
         _ <- service.signup("duplicate@example.com", "secret")
       yield ()
 
-      program.attempt.map(res => assertEquals(res.left.map(_.getClass), Left(classOf[AuthError.EmailAlreadyExists.type])))
+      program.attempt.map(res =>
+        assertEquals(res.left.map(_.getClass), Left(classOf[AuthError.EmailAlreadyExists.type]))
+      )
     }
   }
 
@@ -65,7 +67,7 @@ class AuthServiceSpec extends CatsEffectSuite:
       val service = AuthService[IO](repo, passwordHasher, jwtService)
       for
         signup <- service.signup("login@example.com", "secret")
-        login  <- service.login("login@example.com", "secret")
+        login <- service.login("login@example.com", "secret")
       yield assertEquals(signup.user.email, login.user.email)
     }
   }
@@ -73,10 +75,10 @@ class AuthServiceSpec extends CatsEffectSuite:
   private final class InMemoryRepo(ref: Ref[IO, Map[UUID, User]]) extends UserRepository[IO]:
     override def create(email: String, passwordHash: String): IO[User] =
       for
-        id  <- IO(UUID.randomUUID())
+        id <- IO(UUID.randomUUID())
         now <- IO.realTimeInstant
         user = User(id, email, passwordHash, now, now)
-        _   <- ref.update(_ + (id -> user))
+        _ <- ref.update(_ + (id -> user))
       yield user
 
     override def findByEmail(email: String): IO[Option[User]] =

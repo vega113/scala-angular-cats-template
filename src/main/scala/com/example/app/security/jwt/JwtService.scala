@@ -49,17 +49,18 @@ object JwtService {
           private def parsePayload(claim: JwtClaim): Option[JwtPayload] =
             for
               subject <- claim.subject
-              uuid    <- scala.util.Try(UUID.fromString(subject)).toOption
+              uuid <- scala.util.Try(UUID.fromString(subject)).toOption
               payload <- io.circe.parser.decode[JwtPayload](claim.content).toOption
-              _       <- Option.when(payload.userId == uuid)(())
+              _ <- Option.when(payload.userId == uuid)(())
             yield payload
         }
       case None => Sync[F].raiseError(new IllegalStateException("JWT secret is not configured"))
 
-  private given Encoder[JwtPayload] = (a: JwtPayload) => Json.obj(
-    "userId" -> a.userId.toString.asJson,
-    "email" -> a.email.asJson
-  )
+  private given Encoder[JwtPayload] = (a: JwtPayload) =>
+    Json.obj(
+      "userId" -> a.userId.toString.asJson,
+      "email" -> a.email.asJson
+    )
 
   private given Decoder[JwtPayload] = Decoder.instance { cursor =>
     for

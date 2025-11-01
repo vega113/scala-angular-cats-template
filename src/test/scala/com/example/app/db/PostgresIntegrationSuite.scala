@@ -2,7 +2,16 @@ package com.example.app.db
 
 import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import com.example.app.config.{AngularConfig, AppConfig, DbConfig, HttpConfig, JwtConfig, LoggingConfig, TodoConfig, TracingConfig}
+import com.example.app.config.{
+  AngularConfig,
+  AppConfig,
+  DbConfig,
+  HttpConfig,
+  JwtConfig,
+  LoggingConfig,
+  TodoConfig,
+  TracingConfig
+}
 import doobie.implicits._
 import munit.CatsEffectSuite
 import org.testcontainers.DockerClientFactory
@@ -48,7 +57,8 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
     withPostgres { container =>
       val cfg = configFromContainer(container)
       val email = "integration@example.com"
-      val passwordHash = "$2a$10$Z.uq3G6eeiN4sqw2H8t2XePrwL7hIwrKyYVJZZzKzbwQ6vurIWBiK" // precomputed hash
+      val passwordHash =
+        "$2a$10$Z.uq3G6eeiN4sqw2H8t2XePrwL7hIwrKyYVJZZzKzbwQ6vurIWBiK" // precomputed hash
 
       for
         _ <- MigrationRunner.migrate(cfg)
@@ -79,12 +89,13 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
         .use {
           case Some(xa) =>
             for
-              jwt <- com.example.app.security.jwt.JwtService[IO](repoConfig.jwt.copy(secret = Some("it-secret")))
+              jwt <- com.example.app.security.jwt
+                .JwtService[IO](repoConfig.jwt.copy(secret = Some("it-secret")))
               repo = com.example.app.auth.UserRepository.doobie[IO](xa)
               hasher = com.example.app.security.PasswordHasher.bcrypt[IO]()
               service = com.example.app.auth.AuthService[IO](repo, hasher, jwt)
               signup <- service.signup("pguser@example.com", "secret")
-              login  <- service.login("pguser@example.com", "secret")
+              login <- service.login("pguser@example.com", "secret")
             yield assertEquals(login.user.email, signup.user.email)
           case None => IO.raiseError(new RuntimeException("missing transactor"))
         }

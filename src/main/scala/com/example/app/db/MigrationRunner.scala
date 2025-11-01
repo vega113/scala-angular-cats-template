@@ -15,7 +15,8 @@ object MigrationRunner:
           val defaultSchema = cfg.db.schema.getOrElse("public")
           val migrateIO = IO.blocking {
             Class.forName("org.postgresql.Driver")
-            val builder = Flyway.configure()
+            val builder = Flyway
+              .configure()
               .dataSource(url, cfg.db.user.orNull, cfg.db.password.orNull)
               .locations("classpath:db/migration")
               .baselineOnMigrate(true)

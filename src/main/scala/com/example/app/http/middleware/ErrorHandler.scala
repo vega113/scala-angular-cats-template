@@ -16,23 +16,23 @@ object ErrorHandler:
     app(req).handleErrorWith { th =>
       for
         logger <- Slf4jLogger.create[IO]
-        rid     = req.headers.get(RequestIdHeader).map(_.head.value).getOrElse("-")
-        _      <- logger.error(
-                    Map(
-                      "event" -> "request.error",
-                      "method" -> req.method.name,
-                      "path" -> req.uri.path.renderString,
-                      "requestId" -> rid
-                    ),
-                    th
-                  )("Unhandled exception in request pipeline")
-        body    = Json.obj(
-                    "error" -> Json.obj(
-                      "code" -> Json.fromString("internal_error"),
-                      "message" -> Json.fromString("Internal server error"),
-                      "ref" -> Json.fromString(rid)
-                    )
-                  )
+        rid = req.headers.get(RequestIdHeader).map(_.head.value).getOrElse("-")
+        _ <- logger.error(
+          Map(
+            "event" -> "request.error",
+            "method" -> req.method.name,
+            "path" -> req.uri.path.renderString,
+            "requestId" -> rid
+          ),
+          th
+        )("Unhandled exception in request pipeline")
+        body = Json.obj(
+          "error" -> Json.obj(
+            "code" -> Json.fromString("internal_error"),
+            "message" -> Json.fromString("Internal server error"),
+            "ref" -> Json.fromString(rid)
+          )
+        )
       yield Response[IO](status = Status.InternalServerError)
         .withEntity(body)
         .putHeaders(Header.Raw(RequestIdHeader, rid))

@@ -22,7 +22,11 @@ trait AuthService[F[_]] {
 }
 
 object AuthService {
-  def apply[F[_]: Sync](repo: UserRepository[F], hasher: PasswordHasher[F], jwt: JwtService[F]): AuthService[F] =
+  def apply[F[_]: Sync](
+    repo: UserRepository[F],
+    hasher: PasswordHasher[F],
+    jwt: JwtService[F]
+  ): AuthService[F] =
     new AuthService[F] {
       private val F = Sync[F]
 
@@ -30,28 +34,28 @@ object AuthService {
         val normalized = normalizeEmail(email)
         for
           existing <- repo.findByEmail(normalized)
-          _        <- existing match
-                        case Some(_) => F.raiseError(AuthError.EmailAlreadyExists)
-                        case None    => F.unit
-          hash     <- hasher.hash(password)
-          user     <- repo.create(normalized, hash)
-          token    <- jwt.generate(JwtPayload(user.id, user.email))
+          _ <- existing match
+            case Some(_) => F.raiseError(AuthError.EmailAlreadyExists)
+            case None => F.unit
+          hash <- hasher.hash(password)
+          user <- repo.create(normalized, hash)
+          token <- jwt.generate(JwtPayload(user.id, user.email))
         yield AuthResult(user, token)
 
       override def login(email: String, password: String): F[AuthResult] =
         val normalized = normalizeEmail(email)
         for
           maybeUser <- repo.findByEmail(normalized)
-          result    <- maybeUser match
-                          case Some(user) =>
-                            hasher.verify(password, user.passwordHash).flatMap { valid =>
-                              if valid then
-                                jwt.generate(JwtPayload(user.id, user.email)).map(AuthResult(user, _))
-                              else
-                                F.raiseError[AuthResult](AuthError.InvalidCredentials)
-                            }
-                          case None =>
-                            PasswordHasher.constantTimeFailure[F](password) *> F.raiseError[AuthResult](AuthError.InvalidCredentials)
+          result <- maybeUser match
+            case Some(user) =>
+              hasher.verify(password, user.passwordHash).flatMap { valid =>
+                if valid then jwt.generate(JwtPayload(user.id, user.email)).map(AuthResult(user, _))
+                else F.raiseError[AuthResult](AuthError.InvalidCredentials)
+              }
+            case None =>
+              PasswordHasher.constantTimeFailure[F](password) *> F.raiseError[AuthResult](
+                AuthError.InvalidCredentials
+              )
         yield result
 
       override def currentUser(userId: UUID): F[Option[User]] =

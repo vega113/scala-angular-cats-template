@@ -22,7 +22,7 @@ object FieldPatch {
       case Some(c) =>
         c.value match
           case Json.Null => Right(Clear)
-          case _         => c.as[A].map(Set(_))
+          case _ => c.as[A].map(Set(_))
 
   given [A](using encoder: Encoder[A]): Encoder[FieldPatch[A]] = Encoder.instance {
     case Unchanged => Json.Null

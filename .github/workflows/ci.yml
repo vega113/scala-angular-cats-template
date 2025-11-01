@@ -6,97 +6,37 @@ on:
   pull_request:
     branches: [ main ]
 
-permissions:
-  contents: read
-  actions: write
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build-test:
-    runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
-        ports:
-          - "5432:5432"
-        options: >-
-          --health-cmd="pg_isready -U postgres"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
-    env:
-      CI: true
-      JAVA_TOOL_OPTIONS: -Xmx2g
-      SBT_OPTS: -Xmx2g
-      # Dev defaults for tasks that rely on these
-      HTTP_PORT: 8080
-      BACKEND_HOST: localhost
-      BACKEND_PORT: 8080
-      ANGULAR_MODE: dev
-      ANGULAR_PORT: 4200
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/testdb?sslmode=disable
+  build:
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node.js (UI)
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: ui/package-lock.json
 
-      - name: Set up Java (Scala)
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
-          cache: 'sbt'
-
-      - name: Cache SBT and Coursier
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.ivy2/cache
-            ~/.sbt
-            ~/.cache/coursier
-          key: ${{ runner.os }}-sbt-${{ hashFiles('**/build.sbt', '**/project/*.sbt', '**/project/build.properties', '**/project/plugins.sbt') }}
-          restore-keys: |
-            ${{ runner.os }}-sbt-
-
-      - name: Install UI dependencies
+      - name: Install UI deps
+        run: npm ci
         working-directory: ui
-        run: |
-          if [ -f package.json ]; then npm ci; else echo "No UI project"; fi
 
-      - name: Lint/Build UI (dev)
+      - name: Lint UI
+        run: npm run lint
         working-directory: ui
-        run: |
-          if [ -f package.json ]; then \
-            npm run lint --if-present && \
-            npm run build -- --configuration development --output-path ../src/main/resources/static; \
-          else \
-            echo "Skipping UI build"; \
-          fi
 
-      - name: Backend tests
-        run: sbt -v test
+      - name: Scala fmt check & tests
+        run: sbt scalafmtCheckAll test
 
-      - name: Stage application (smoke build)
-        run: sbt -v stage
-
-      - name: Upload staged app artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staged-app
-          path: target/universal/stage/**
+      - name: Verify prod UI build
+        run: ANGULAR_MODE=prod sbt uiBuild

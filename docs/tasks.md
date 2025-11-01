@@ -116,12 +116,12 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
 | T-601 | ✅ | Angular scaffold + routing | 2h | T-103 |
-| T-602 | 🟡 | Auth pages (login/signup) + service | 3h | T-601 |
+| T-602 | ✅ | Auth pages (login/signup) + service | 3h | T-601 |
 | T-603 | ✅ | JWT interceptor + guard | 1h | T-601 |
 | T-604 | ✅ | Todos pages (list/form) + service | 4h | T-601 |
 | T-605 | ✅ | Dev proxy verification | 0.5h | T-104, T-201 |
 | T-606 | ✅ | Build to static resources (prod) | 0.5h | T-107 |
-| T-607 | 🟢 | SBT run starts Angular dev server + prod static serving | 1h | T-104, T-201 |
+| T-607 | ✅ | SBT run starts Angular dev server + prod static serving | 1h | T-104, T-201 |
 
 - DoD: UI performs auth+todo flows against dev proxy; prod build lands in backend static folder.
 - Agent Context: ui/src/app/*, ui/src/proxy.conf.js, angular.json, package.json.
@@ -190,12 +190,16 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 
 | ID | Status | Task | Estimate | Dependencies |
 |----|--------|------|----------|--------------|
-| T-1001 | 🟡 | Scalafmt + ESLint configs | 0.5h | T-101, T-103 |
-| T-1002 | 🟡 | CI workflow: test + build + stage | 2h | T-203, T-606 |
-| T-1003 | 🟡 | Pre-push checks (fmt, test) | 0.5h | T-1001 |
+| T-1001 | ✅ | Scalafmt + ESLint configs | 0.5h | T-101, T-103 |
+| T-1002 | ✅ | CI workflow: test + build + stage | 2h | T-203, T-606 |
+| T-1003 | ✅ | Pre-push checks (fmt, test) | 0.5h | T-1001 |
 
 - DoD: CI green on PR; formatting enforced; tests run headless.
-- Agent Context: .scalafmt.conf, .eslintrc, .github/workflows/ci.yml.
+- Agent Context: `.scalafmt.conf`, `ui/.eslintrc.json`, `.github/workflows/ci.yml`, `scripts/pre-push.sh`.
+- Notes:
+  - T-1001: sbt-scalafmt plugin + config added; Angular ESLint config and dependencies installed.
+  - T-1002: GitHub Actions workflow runs `npm ci`, lint, `sbt scalafmtCheckAll test`, and prod UI build.
+  - T-1003: `scripts/pre-push.sh` automates fmt/test/lint/build ahead of pushes.
 
 ---
 
