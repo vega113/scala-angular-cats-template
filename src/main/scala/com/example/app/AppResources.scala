@@ -2,7 +2,7 @@ package com.example.app
 
 import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import com.example.app.auth.UserRepository
+import com.example.app.auth.{PasswordResetTokenRepository, UserRepository}
 import com.example.app.config.AppConfig
 import com.example.app.db.TransactorBuilder
 import com.example.app.security.PasswordHasher
@@ -15,7 +15,8 @@ final case class AppResources(
   passwordHasher: PasswordHasher[IO],
   userRepository: UserRepository[IO],
   jwtService: JwtService[IO],
-  todoRepository: TodoRepository[IO]
+  todoRepository: TodoRepository[IO],
+  passwordResetTokenRepository: PasswordResetTokenRepository[IO]
 )
 
 object AppResources {
@@ -29,5 +30,6 @@ object AppResources {
       hasher = PasswordHasher.bcrypt[IO]()
       userRepo = UserRepository.doobie[IO](xa)
       todoRepo = TodoRepository.doobie[IO](xa)
-    yield AppResources(xa, hasher, userRepo, jwt, todoRepo)
+      passwordResetRepo = PasswordResetTokenRepository.doobie[IO](xa)
+    yield AppResources(xa, hasher, userRepo, jwt, todoRepo, passwordResetRepo)
 }

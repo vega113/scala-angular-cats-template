@@ -86,3 +86,13 @@ class AuthServiceSpec extends CatsEffectSuite:
 
     override def findById(id: UUID): IO[Option[User]] =
       ref.get.map(_.get(id))
+
+    override def updatePassword(id: UUID, passwordHash: String): IO[Unit] =
+      for
+        now <- IO.realTimeInstant
+        _ <- ref.update { users =>
+          users.get(id) match
+            case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case None => users
+        }
+      yield ()

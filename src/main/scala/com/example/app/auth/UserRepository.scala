@@ -12,6 +12,7 @@ trait UserRepository[F[_]] {
   def create(email: String, passwordHash: String): F[User]
   def findByEmail(email: String): F[Option[User]]
   def findById(id: UUID): F[Option[User]]
+  def updatePassword(id: UUID, passwordHash: String): F[Unit]
 }
 
 object UserRepository {
@@ -44,6 +45,17 @@ object UserRepository {
         sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE id = $id"
       ).option
         .transact(xa)
+
+    override def updatePassword(id: UUID, passwordHash: String): F[Unit] =
+      for
+        now <- nowF
+        _ <-
+          sql"""UPDATE users
+                SET password_hash = $passwordHash,
+                    updated_at = $now
+                WHERE id = $id
+             """.update.run.transact(xa)
+      yield ()
 
     private def selectUser(query: Fragment): Query0[User] =
       query.query[(UUID, String, String, Instant, Instant)].map { case (i, e, p, c, u) =>

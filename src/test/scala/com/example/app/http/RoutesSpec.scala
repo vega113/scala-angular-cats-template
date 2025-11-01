@@ -3,7 +3,7 @@ package com.example.app.http
 import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import cats.syntax.all.*
-import com.example.app.auth.{AuthResult, AuthService, User}
+import com.example.app.auth.{AuthResult, AuthService, PasswordResetService, User}
 import com.example.app.config.TodoConfig
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 import com.example.app.security.jwt.JwtPayload
@@ -32,6 +32,12 @@ class RoutesSpec extends CatsEffectSuite:
       IO.raiseError(new NotImplementedError)
     override def currentUser(userId: UUID): IO[Option[User]] = IO.pure(None)
     override def authenticate(token: String): IO[Option[JwtPayload]] = IO.pure(None)
+  }
+
+  private val stubPasswordResetService = new PasswordResetService[IO] {
+    override def request(email: String): IO[Unit] = IO.unit
+
+    override def confirm(token: String, newPassword: String): IO[Unit] = IO.unit
   }
 
   private val sampleTodo = Todo(
@@ -71,7 +77,7 @@ class RoutesSpec extends CatsEffectSuite:
     authMiddleware: AuthMiddleware[IO, AuthUser],
     readiness: IO[Unit] = IO.unit
   ): HttpApp[IO] =
-    new Routes(new AuthRoutes(stubAuthService), todoRoutes, authMiddleware, readiness).httpApp
+    new Routes(new AuthRoutes(stubAuthService, stubPasswordResetService), todoRoutes, authMiddleware, readiness).httpApp
 
   private val unauthenticatedMiddleware: AuthMiddleware[IO, AuthUser] =
     AuthMiddleware(Kleisli(_ => OptionT.none[IO, AuthUser]))

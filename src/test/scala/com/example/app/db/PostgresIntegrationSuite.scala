@@ -9,6 +9,7 @@ import com.example.app.config.{
   HttpConfig,
   JwtConfig,
   LoggingConfig,
+  PasswordResetConfig,
   TodoConfig,
   TracingConfig
 }
@@ -16,6 +17,7 @@ import doobie.implicits._
 import munit.CatsEffectSuite
 import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.PostgreSQLContainer
+import scala.concurrent.duration._
 
 class PostgresIntegrationSuite extends CatsEffectSuite:
   private val dockerAvailable: Boolean = DockerSupport.isAvailable
@@ -128,7 +130,11 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
       jwt = JwtConfig(secret = None, ttl = 3600),
       logging = LoggingConfig(level = "INFO"),
       tracing = TracingConfig(enabled = false),
-      todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100)
+      todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100),
+      passwordReset = PasswordResetConfig(
+        resetUrlBase = "http://localhost:4200/password-reset/confirm",
+        tokenTtl = 1.hour
+      )
     )
 
 object DockerSupport:

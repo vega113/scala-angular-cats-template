@@ -9,6 +9,7 @@ import com.example.app.config.{
   HttpConfig,
   JwtConfig,
   LoggingConfig,
+  PasswordResetConfig,
   TodoConfig,
   TracingConfig
 }
@@ -17,6 +18,7 @@ import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
 import java.time.Instant
 import java.util.UUID
+import scala.concurrent.duration._
 
 class TodoRepositoryPostgresSpec extends CatsEffectSuite {
   private val dockerAvailable = DockerSupport.isAvailable
@@ -83,6 +85,10 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       jwt = JwtConfig(secret = Some("integration"), ttl = 3600),
       logging = LoggingConfig(level = "INFO"),
       tracing = TracingConfig(enabled = false),
-      todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100)
+      todo = TodoConfig(defaultPageSize = 20, maxPageSize = 100),
+      passwordReset = PasswordResetConfig(
+        resetUrlBase = "http://localhost:4200/password-reset/confirm",
+        tokenTtl = 1.hour
+      )
     )
 }

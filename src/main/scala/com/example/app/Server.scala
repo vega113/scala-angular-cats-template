@@ -11,7 +11,7 @@ import org.http4s.server.middleware._
 import org.http4s.server.staticcontent.resourceServiceBuilder
 import org.http4s.headers.Accept
 import com.example.app.config.*
-import com.example.app.auth.AuthService
+import com.example.app.auth.{AuthService, PasswordResetService}
 import com.example.app.http.{AuthRoutes, Routes, TodoRoutes}
 import com.example.app.http.middleware.{
   ErrorHandler,
@@ -36,9 +36,19 @@ object Server:
         resources.passwordHasher,
         resources.jwtService
       )
+      passwordResetNotifier = PasswordResetService.Notifier.logging[IO]
+      passwordResetService = PasswordResetService[IO](
+        PasswordResetService.Dependencies(
+          resources.userRepository,
+          resources.passwordResetTokenRepository,
+          resources.passwordHasher,
+          passwordResetNotifier,
+          cfg.passwordReset
+        )
+      )
       todoService = TodoService[IO](resources.todoRepository)
       authMiddleware = BearerAuthMiddleware(authService)
-      authRoutes = new AuthRoutes(authService)
+      authRoutes = new AuthRoutes(authService, passwordResetService)
       todoRoutes = new TodoRoutes(todoService, cfg.todo)
       routes = new Routes(authRoutes, todoRoutes, authMiddleware, readinessCheck)
       entryPoint <- Tracing.entryPoint(cfg.tracing)

@@ -24,6 +24,10 @@ final case class JwtConfig(secret: Option[String], ttl: Int) derives ConfigReade
 final case class LoggingConfig(level: String) derives ConfigReader
 final case class TracingConfig(enabled: Boolean) derives ConfigReader
 final case class TodoConfig(defaultPageSize: Int, maxPageSize: Int) derives ConfigReader
+final case class PasswordResetConfig(
+  resetUrlBase: String,
+  tokenTtl: FiniteDuration = 1.hour
+) derives ConfigReader
 final case class AppConfig(
   http: HttpConfig,
   angular: AngularConfig,
@@ -31,5 +35,6 @@ final case class AppConfig(
   jwt: JwtConfig,
   logging: LoggingConfig,
   tracing: TracingConfig,
-  todo: TodoConfig
+  todo: TodoConfig,
+  passwordReset: PasswordResetConfig
 ) derives ConfigReader

@@ -1,8 +1,9 @@
 package com.example.app.config
 
-import cats.effect.{IO, Resource}
+import cats.effect.IO
 import pureconfig.ConfigSource
 import com.example.app.db.DatabaseUrlParser
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object ConfigLoader:
   def load: IO[AppConfig] =
@@ -25,6 +26,12 @@ object ConfigLoader:
         case "false" => Some(false)
         case _ => None
       )
+    val passwordResetUrlBase =
+      sys.env.get("PASSWORD_RESET_URL_BASE").map(_.trim).filter(_.nonEmpty)
+    val passwordResetTtl =
+      sys.env
+        .get("PASSWORD_RESET_TOKEN_TTL")
+        .flatMap(parseFiniteDuration)
 
     val updatedAngular = cfg.angular.copy(
       mode = angularMode.getOrElse(cfg.angular.mode),
@@ -35,4 +42,16 @@ object ConfigLoader:
       enabled = tracingEnabled.getOrElse(cfg.tracing.enabled)
     )
 
-    cfg.copy(angular = updatedAngular, tracing = updatedTracing)
+    val updatedPasswordReset = cfg.passwordReset.copy(
+      resetUrlBase = passwordResetUrlBase.getOrElse(cfg.passwordReset.resetUrlBase),
+      tokenTtl = passwordResetTtl.getOrElse(cfg.passwordReset.tokenTtl)
+    )
+
+    cfg.copy(
+      angular = updatedAngular,
+      tracing = updatedTracing,
+      passwordReset = updatedPasswordReset
+    )
+
+  private def parseFiniteDuration(value: String): Option[FiniteDuration] =
+    scala.util.Try(Duration(value)).toOption.collect { case fd: FiniteDuration => fd }
