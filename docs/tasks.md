@@ -117,7 +117,7 @@ _Status log_: 2025-10-30 – T-305 marked ✅ after migrations committed and int
 |----|--------|------|----------|--------------|
 | T-601 | ✅ | Angular scaffold + routing | 2h | T-103 |
 | T-602 | 🟡 | Auth pages (login/signup) + service | 3h | T-601 |
-| T-603 | 🟢 | JWT interceptor + guard | 1h | T-601 |
+| T-603 | ✅ | JWT interceptor + guard | 1h | T-601 |
 | T-604 | 🟡 | Todos pages (list/form) + service | 4h | T-601 |
 | T-605 | 🟡 | Dev proxy verification | 0.5h | T-104, T-201 |
 | T-606 | 🟡 | Build to static resources (prod) | 0.5h | T-107 |
