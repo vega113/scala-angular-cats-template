@@ -3,7 +3,7 @@ package com.example.app.http
 import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import cats.syntax.all.*
-import com.example.app.auth.{AuthResult, AuthService, PasswordResetService, User}
+import com.example.app.auth.{AccountActivationService, AuthResult, AuthService, PasswordResetService, User}
 import com.example.app.config.TodoConfig
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 import com.example.app.security.jwt.JwtPayload
@@ -26,9 +26,11 @@ class RoutesSpec extends CatsEffectSuite:
   private given Logger[IO] = NoOpLogger[IO]
 
   private val stubAuthService = new AuthService[IO] {
-    override def signup(email: String, password: String): IO[AuthResult] =
+    override def signup(email: String, password: String): IO[User] =
       IO.raiseError(new NotImplementedError)
     override def login(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
+    override def issueToken(user: User): IO[AuthResult] =
       IO.raiseError(new NotImplementedError)
     override def currentUser(userId: UUID): IO[Option[User]] = IO.pure(None)
     override def authenticate(token: String): IO[Option[JwtPayload]] = IO.pure(None)
@@ -38,6 +40,12 @@ class RoutesSpec extends CatsEffectSuite:
     override def request(email: String): IO[Unit] = IO.unit
 
     override def confirm(token: String, newPassword: String): IO[Unit] = IO.unit
+  }
+
+  private val stubActivationService = new AccountActivationService[IO] {
+    override def issueToken(user: User): IO[Unit] = IO.unit
+    override def activate(token: String): IO[User] =
+      IO.raiseError(new NotImplementedError)
   }
 
   private val sampleTodo = Todo(
@@ -77,7 +85,12 @@ class RoutesSpec extends CatsEffectSuite:
     authMiddleware: AuthMiddleware[IO, AuthUser],
     readiness: IO[Unit] = IO.unit
   ): HttpApp[IO] =
-    new Routes(new AuthRoutes(stubAuthService, stubPasswordResetService), todoRoutes, authMiddleware, readiness).httpApp
+    new Routes(
+      new AuthRoutes(stubAuthService, stubPasswordResetService, stubActivationService),
+      todoRoutes,
+      authMiddleware,
+      readiness
+    ).httpApp
 
   private val unauthenticatedMiddleware: AuthMiddleware[IO, AuthUser] =
     AuthMiddleware(Kleisli(_ => OptionT.none[IO, AuthUser]))

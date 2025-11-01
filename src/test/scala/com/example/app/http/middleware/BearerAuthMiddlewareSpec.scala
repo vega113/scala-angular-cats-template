@@ -17,9 +17,11 @@ class BearerAuthMiddlewareSpec extends CatsEffectSuite {
   private val payload = JwtPayload(UUID.randomUUID(), "user@example.com")
 
   private val authService = new AuthService[IO] {
-    override def signup(email: String, password: String): IO[AuthResult] =
+    override def signup(email: String, password: String): IO[User] =
       IO.raiseError(new NotImplementedError)
     override def login(email: String, password: String): IO[AuthResult] =
+      IO.raiseError(new NotImplementedError)
+    override def issueToken(user: User): IO[AuthResult] =
       IO.raiseError(new NotImplementedError)
     override def currentUser(userId: UUID): IO[Option[User]] = IO.pure(None)
     override def authenticate(token: String): IO[Option[JwtPayload]] =

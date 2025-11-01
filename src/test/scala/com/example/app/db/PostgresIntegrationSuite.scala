@@ -12,8 +12,10 @@ import com.example.app.config.{
   EmailConfig,
   PasswordResetConfig,
   TodoConfig,
-  TracingConfig
+  TracingConfig,
+  ActivationConfig
 }
+import scala.concurrent.duration.*
 import doobie.implicits._
 import munit.CatsEffectSuite
 import org.testcontainers.DockerClientFactory
@@ -99,11 +101,16 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
                 .JwtService[IO](repoConfig.jwt.copy(secret = Some("it-secret")))
               repo = com.example.app.auth.UserRepository.doobie[IO](xa)
               hasher = com.example.app.security.PasswordHasher.bcrypt[IO]()
-              emailService = com.example.app.email.EmailService.fromConfig[IO](repoConfig.email)
-              service = com.example.app.auth.AuthService[IO](repo, hasher, jwt, emailService, repoConfig.email)
+              activationService = new com.example.app.auth.AccountActivationService[IO] {
+                override def issueToken(user: com.example.app.auth.User): IO[Unit] =
+                  repo.markActivated(user.id)
+                override def activate(token: String): IO[com.example.app.auth.User] =
+                  IO.raiseError(new RuntimeException("not used in integration test"))
+              }
+              service = com.example.app.auth.AuthService[IO](repo, hasher, jwt, activationService)
               signup <- service.signup("pguser@example.com", "secret")
               login <- service.login("pguser@example.com", "secret")
-            yield assertEquals(login.user.email, signup.user.email)
+            yield assertEquals(login.user.email, signup.email)
           case None => IO.raiseError(new RuntimeException("missing transactor"))
         }
     }
@@ -147,7 +154,8 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
       passwordReset = PasswordResetConfig(
         resetUrlBase = "http://localhost:4200/password-reset/confirm",
         tokenTtl = 1.hour
-      )
+      ),
+      activation = ActivationConfig(tokenTtl = 24.hours)
     )
 
 object DockerSupport:

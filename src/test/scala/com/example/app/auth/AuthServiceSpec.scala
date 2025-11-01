@@ -3,10 +3,9 @@ package com.example.app.auth
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.syntax.all._
-import com.example.app.config.EmailConfig
-import com.example.app.email.EmailService
 import com.example.app.security.PasswordHasher
 import com.example.app.security.jwt.{JwtPayload, JwtService}
+import com.example.app.auth.AccountActivationService
 import munit.CatsEffectSuite
 
 import java.time.Instant
@@ -15,18 +14,10 @@ import java.util.UUID
 class AuthServiceSpec extends CatsEffectSuite:
   private val passwordHasher = PasswordHasher.bcrypt[IO]()
   private val staticToken = "static-token"
-  private val emailConfig = EmailConfig()
-
-  private val noopEmailService = new EmailService[IO] {
-    override def sendPasswordReset(
-      to: String,
-      subject: String,
-      resetUrl: String,
-      token: String
-    ): IO[Unit] = IO.unit
-
-    override def sendActivationLink(to: String, subject: String, activationUrl: String): IO[Unit] =
-      IO.unit
+  private val activationService = new AccountActivationService[IO] {
+    override def issueToken(user: User): IO[Unit] = IO.unit
+    override def activate(token: String): IO[User] =
+      IO.raiseError(new UnsupportedOperationException("not used in tests"))
   }
 
   private val jwtService = new JwtService[IO]:
@@ -42,13 +33,13 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("signup stores normalized email and returns token") {
     inMemoryRepo.flatMap { case (repo, ref) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, activationService)
       for
-        result <- service.signup("User@Example.com ", "secret")
+        user <- service.signup("User@Example.com ", "secret")
         stored <- ref.get
       yield {
-        assertEquals(result.user.email, "user@example.com")
-        assertEquals(result.token, staticToken)
+        assertEquals(user.email, "user@example.com")
+        assert(!user.activated)
         assert(stored.values.exists(_.email == "user@example.com"))
       }
     }
@@ -56,7 +47,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("signup rejects duplicate email") {
     inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, activationService)
       val program = for
         _ <- service.signup("duplicate@example.com", "secret")
         _ <- service.signup("duplicate@example.com", "secret")
@@ -70,7 +61,7 @@ class AuthServiceSpec extends CatsEffectSuite:
 
   test("login rejects unknown email") {
     inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
+      val service = AuthService[IO](repo, passwordHasher, jwtService, activationService)
       service.login("missing@example.com", "secret").attempt.map { res =>
         assertEquals(res.left.map(_.getClass), Left(classOf[AuthError.InvalidCredentials.type]))
       }
@@ -78,12 +69,13 @@ class AuthServiceSpec extends CatsEffectSuite:
   }
 
   test("login succeeds with correct credentials") {
-    inMemoryRepo.flatMap { case (repo, _) =>
-      val service = AuthService[IO](repo, passwordHasher, jwtService, noopEmailService, emailConfig)
+    inMemoryRepo.flatMap { case (repo, ref) =>
+      val service = AuthService[IO](repo, passwordHasher, jwtService, activationService)
       for
-        signup <- service.signup("login@example.com", "secret")
+        user <- service.signup("login@example.com", "secret")
+        _ <- repo.markActivated(user.id)
         login <- service.login("login@example.com", "secret")
-      yield assertEquals(signup.user.email, login.user.email)
+      yield assertEquals(login.user.email, "login@example.com")
     }
   }
 
@@ -92,7 +84,7 @@ class AuthServiceSpec extends CatsEffectSuite:
       for
         id <- IO(UUID.randomUUID())
         now <- IO.realTimeInstant
-        user = User(id, email, passwordHash, now, now)
+        user = User(id, email, passwordHash, activated = false, now, now)
         _ <- ref.update(_ + (id -> user))
       yield user
 
@@ -108,6 +100,16 @@ class AuthServiceSpec extends CatsEffectSuite:
         _ <- ref.update { users =>
           users.get(id) match
             case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case None => users
+        }
+      yield ()
+
+    override def markActivated(id: UUID): IO[Unit] =
+      for
+        now <- IO.realTimeInstant
+        _ <- ref.update { users =>
+          users.get(id) match
+            case Some(user) => users.updated(id, user.copy(activated = true, updatedAt = now))
             case None => users
         }
       yield ()

@@ -11,7 +11,7 @@ import org.http4s.server.middleware._
 import org.http4s.server.staticcontent.resourceServiceBuilder
 import org.http4s.headers.Accept
 import com.example.app.config.*
-import com.example.app.auth.{AuthService, PasswordResetService}
+import com.example.app.auth.{AccountActivationService, AuthService, PasswordResetService}
 import com.example.app.email.EmailService
 import com.example.app.http.{AuthRoutes, Routes, TodoRoutes}
 import com.example.app.http.middleware.{
@@ -33,12 +33,20 @@ object Server:
       readinessCheck = sql"select 1".query[Int].unique.transact(resources.transactor).void
       given Logger[IO] = logger
       emailService = EmailService.fromConfig[IO](cfg.email)
+      activationService = AccountActivationService[IO](
+        AccountActivationService.Dependencies(
+          resources.userRepository,
+          resources.activationTokenRepository,
+          emailService,
+          cfg.email,
+          AccountActivationService.Config(cfg.activation.tokenTtl)
+        )
+      )
       authService = AuthService[IO](
         resources.userRepository,
         resources.passwordHasher,
         resources.jwtService,
-        emailService,
-        cfg.email
+        activationService
       )
       passwordResetService = PasswordResetService[IO](
         PasswordResetService.Dependencies(
@@ -52,7 +60,7 @@ object Server:
       )
       todoService = TodoService[IO](resources.todoRepository)
       authMiddleware = BearerAuthMiddleware(authService)
-      authRoutes = new AuthRoutes(authService, passwordResetService)
+      authRoutes = new AuthRoutes(authService, passwordResetService, activationService)
       todoRoutes = new TodoRoutes(todoService, cfg.todo)
       routes = new Routes(authRoutes, todoRoutes, authMiddleware, readinessCheck)
       entryPoint <- Tracing.entryPoint(cfg.tracing)

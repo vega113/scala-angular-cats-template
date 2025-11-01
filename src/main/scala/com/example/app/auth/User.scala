@@ -7,6 +7,7 @@ final case class User(
   id: UUID,
   email: String,
   passwordHash: String,
+  activated: Boolean,
   createdAt: Instant,
   updatedAt: Instant
 )

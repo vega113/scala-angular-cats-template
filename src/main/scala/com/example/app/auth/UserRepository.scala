@@ -13,6 +13,7 @@ trait UserRepository[F[_]] {
   def findByEmail(email: String): F[Option[User]]
   def findById(id: UUID): F[Option[User]]
   def updatePassword(id: UUID, passwordHash: String): F[Unit]
+  def markActivated(id: UUID): F[Unit]
 }
 
 object UserRepository {
@@ -27,22 +28,22 @@ object UserRepository {
       for
         id <- Async[F].delay(UUID.randomUUID())
         now <- nowF
-        user = User(id, email, passwordHash, now, now)
+        user = User(id, email, passwordHash, activated = false, now, now)
         _ <-
-          sql"INSERT INTO users(id, email, password_hash, created_at, updated_at) VALUES ($id, $email, $passwordHash, $now, $now)".update.run
+          sql"INSERT INTO users(id, email, password_hash, activated, created_at, updated_at) VALUES ($id, $email, $passwordHash, FALSE, $now, $now)".update.run
             .transact(xa)
             .void
       yield user
 
     override def findByEmail(email: String): F[Option[User]] =
       selectUser(
-        sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE email = $email"
+        sql"SELECT id, email, password_hash, activated, created_at, updated_at FROM users WHERE email = $email"
       ).option
         .transact(xa)
 
     override def findById(id: UUID): F[Option[User]] =
       selectUser(
-        sql"SELECT id, email, password_hash, created_at, updated_at FROM users WHERE id = $id"
+        sql"SELECT id, email, password_hash, activated, created_at, updated_at FROM users WHERE id = $id"
       ).option
         .transact(xa)
 
@@ -57,9 +58,16 @@ object UserRepository {
              """.update.run.transact(xa)
       yield ()
 
+    override def markActivated(id: UUID): F[Unit] =
+      for
+        now <- nowF
+        _ <-
+          sql"UPDATE users SET activated = TRUE, updated_at = $now WHERE id = $id".update.run.transact(xa)
+      yield ()
+
     private def selectUser(query: Fragment): Query0[User] =
-      query.query[(UUID, String, String, Instant, Instant)].map { case (i, e, p, c, u) =>
-        User(i, e, p, c, u)
+      query.query[(UUID, String, String, Boolean, Instant, Instant)].map { case (i, e, p, activated, c, u) =>
+        User(i, e, p, activated, c, u)
       }
   }
 }

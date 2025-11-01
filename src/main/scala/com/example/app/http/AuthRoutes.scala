@@ -1,7 +1,7 @@
 package com.example.app.http
 
 import cats.effect.IO
-import com.example.app.auth.{AuthError, AuthResult, AuthService, PasswordResetService, User}
+import com.example.app.auth.{AccountActivationService, AuthError, AuthResult, AuthService, PasswordResetService, User}
 import com.example.app.security.jwt.JwtPayload
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
@@ -12,7 +12,11 @@ import org.http4s.{EntityDecoder, HttpRoutes, Request, Response, Status}
 
 import java.util.UUID
 
-final class AuthRoutes(authService: AuthService[IO], passwordResetService: PasswordResetService[IO]) {
+final class AuthRoutes(
+  authService: AuthService[IO],
+  passwordResetService: PasswordResetService[IO],
+  activationService: AccountActivationService[IO]
+) {
   import AuthRoutes.{*, given}
 
   val routes: HttpRoutes[IO] = HttpRoutes.of[IO] {
@@ -26,12 +30,21 @@ final class AuthRoutes(authService: AuthService[IO], passwordResetService: Passw
       requestPasswordReset(req)
     case req @ POST -> Root / "password-reset" / "confirm" =>
       confirmPasswordReset(req)
+    case req @ POST -> Root / "activation" / "confirm" =>
+      confirmActivation(req)
   }
 
   private def signup(req: Request[IO]): IO[Response[IO]] =
     req.as[SignupRequest].flatMap { body =>
       authService.signup(body.email, body.password).attempt.flatMap {
-        case Right(result) => ApiResponse.success(Status.Created, result.asJson)
+        case Right(_) =>
+          ApiResponse.success(
+            Status.Accepted,
+            Json.obj(
+              "status" -> Json.fromString("activation_required"),
+              "message" -> Json.fromString("Check your email to activate your account.")
+            )
+          )
         case Left(err: AuthError) => authErrorResponse(err)
         case Left(_) =>
           ApiResponse.error(ApiError.internal("signup_failed", "Unable to complete signup"))
@@ -81,6 +94,24 @@ final class AuthRoutes(authService: AuthService[IO], passwordResetService: Passw
       }
     }
 
+  private def confirmActivation(req: Request[IO]): IO[Response[IO]] =
+    req.as[ActivationConfirmRequest].flatMap { body =>
+      activationService.activate(body.token).attempt.flatMap {
+        case Right(user) =>
+          authService.issueToken(user).flatMap(result => ApiResponse.success(result.asJson))
+        case Left(AccountActivationService.Error.InvalidToken) =>
+          ApiResponse.error(ApiError.notFound("activation_invalid", "Activation link is invalid"))
+        case Left(AccountActivationService.Error.TokenExpired) =>
+          ApiResponse.error(
+            ApiError.unprocessableEntity("activation_expired", "Activation link has expired")
+          )
+        case Left(_) =>
+          ApiResponse.error(
+            ApiError.internal("activation_failed", "Unable to activate account at this time")
+          )
+      }
+    }
+
   private def me(req: Request[IO]): IO[Response[IO]] =
     extractToken(req).flatMap {
       case Some(token) =>
@@ -105,6 +136,10 @@ final class AuthRoutes(authService: AuthService[IO], passwordResetService: Passw
       ApiResponse.error(ApiError.conflict("email_exists", "Email already registered"))
     case AuthError.InvalidCredentials =>
       ApiResponse.error(ApiError.unauthorized("invalid_credentials", "Invalid credentials"))
+    case AuthError.AccountNotActivated =>
+      ApiResponse.error(
+        ApiError.forbidden("account_not_activated", "Activate your account before signing in")
+      )
 }
 
 object AuthRoutes {
@@ -112,6 +147,7 @@ object AuthRoutes {
   private final case class LoginRequest(email: String, password: String)
   private final case class PasswordResetRequest(email: String)
   private final case class PasswordResetConfirmRequest(token: String, password: String)
+  private final case class ActivationConfirmRequest(token: String)
   private final case class UserResponse(id: UUID, email: String)
   private final case class AuthPayload(token: String, user: UserResponse)
 
@@ -119,10 +155,12 @@ object AuthRoutes {
   private given Decoder[LoginRequest] = deriveDecoder
   private given Decoder[PasswordResetRequest] = deriveDecoder
   private given Decoder[PasswordResetConfirmRequest] = deriveDecoder
+  private given Decoder[ActivationConfirmRequest] = deriveDecoder
   private given EntityDecoder[IO, SignupRequest] = jsonOf[IO, SignupRequest]
   private given EntityDecoder[IO, LoginRequest] = jsonOf[IO, LoginRequest]
   private given EntityDecoder[IO, PasswordResetRequest] = jsonOf[IO, PasswordResetRequest]
   private given EntityDecoder[IO, PasswordResetConfirmRequest] = jsonOf[IO, PasswordResetConfirmRequest]
+  private given EntityDecoder[IO, ActivationConfirmRequest] = jsonOf[IO, ActivationConfirmRequest]
 
   private given Encoder[UserResponse] = deriveEncoder
   private given Encoder[AuthPayload] = deriveEncoder

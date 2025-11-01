@@ -36,6 +36,7 @@ final case class PasswordResetConfig(
   resetUrlBase: String,
   tokenTtl: FiniteDuration = 1.hour
 ) derives ConfigReader
+final case class ActivationConfig(tokenTtl: FiniteDuration = 24.hours) derives ConfigReader
 final case class AppConfig(
   http: HttpConfig,
   angular: AngularConfig,
@@ -45,5 +46,6 @@ final case class AppConfig(
   email: EmailConfig,
   tracing: TracingConfig,
   todo: TodoConfig,
-  passwordReset: PasswordResetConfig
+  passwordReset: PasswordResetConfig,
+  activation: ActivationConfig
 ) derives ConfigReader

@@ -12,12 +12,14 @@ import com.example.app.config.{
   EmailConfig,
   PasswordResetConfig,
   TodoConfig,
-  TracingConfig
+  TracingConfig,
+  ActivationConfig
 }
 import com.example.app.todo.{FieldPatch, TodoCreate, TodoRepository, TodoUpdate}
 import munit.CatsEffectSuite
 import org.testcontainers.utility.DockerImageName
 import java.time.Instant
+import scala.concurrent.duration.*
 import java.util.UUID
 import scala.concurrent.duration._
 
@@ -96,6 +98,7 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       passwordReset = PasswordResetConfig(
         resetUrlBase = "http://localhost:4200/password-reset/confirm",
         tokenTtl = 1.hour
-      )
+      ),
+      activation = ActivationConfig(tokenTtl = 24.hours)
     )
 }

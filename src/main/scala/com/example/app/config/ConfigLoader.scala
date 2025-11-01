@@ -64,11 +64,21 @@ object ConfigLoader:
       tokenTtl = passwordResetTtl.getOrElse(cfg.passwordReset.tokenTtl)
     )
 
+    val activationTtl =
+      sys.env
+        .get("ACTIVATION_TOKEN_TTL")
+        .flatMap(parseFiniteDuration)
+
+    val updatedActivation = cfg.activation.copy(
+      tokenTtl = activationTtl.getOrElse(cfg.activation.tokenTtl)
+    )
+
     cfg.copy(
       angular = updatedAngular,
       tracing = updatedTracing,
       email = updatedEmail,
-      passwordReset = updatedPasswordReset
+      passwordReset = updatedPasswordReset,
+      activation = updatedActivation
     )
 
   private def parseFiniteDuration(value: String): Option[FiniteDuration] =

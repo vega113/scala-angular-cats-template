@@ -149,7 +149,7 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
       for
         id <- IO(UUID.randomUUID())
         now <- IO.realTimeInstant
-        user = User(id, email, passwordHash, now, now)
+        user = User(id, email, passwordHash, activated = true, now, now)
         _ <- state.update(_ + (id -> user))
       yield user
 
@@ -165,6 +165,16 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
         _ <- state.update { users =>
           users.get(id) match
             case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case None => users
+        }
+      yield ()
+
+    override def markActivated(id: UUID): IO[Unit] =
+      for
+        now <- IO.realTimeInstant
+        _ <- state.update { users =>
+          users.get(id) match
+            case Some(user) => users.updated(id, user.copy(activated = true, updatedAt = now))
             case None => users
         }
       yield ()
