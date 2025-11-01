@@ -98,7 +98,7 @@ Environment variables (see docs/requirements.md for full list):
 - Backend: `src/main/scala`, `src/main/resources` (Flyway migrations, Logback, static in prod)
 - Frontend: `ui/` (Angular), `ui/src/proxy.conf.js` for dev proxy
 - CI: `.github/workflows/ci.yml`
-- Docs: `docs/requirements.md`, `docs/design.md`, `docs/tech.md`, `docs/tasks.md`
+- Docs: `docs/requirements.md`, `docs/design.md`, `docs/tech.md`, `docs/tasks.md`, `docs/runbook.md`
 - Collaboration: `AGENTS.md`
 
 ## Docs
@@ -106,6 +106,7 @@ Environment variables (see docs/requirements.md for full list):
 - Design: `docs/design.md`
 - Technical decisions: `docs/tech.md`
 - Tasks and milestones: `docs/tasks.md`
+- On-call runbook: `docs/runbook.md`
 
 ## Contributing
 - See `AGENTS.md` for branching, PRs, and conflict resolution.
