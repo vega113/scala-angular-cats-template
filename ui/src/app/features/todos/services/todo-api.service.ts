@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
 import {
@@ -26,14 +26,31 @@ interface TodoListDto {
   offset: number;
 }
 
+export interface TodoListParams {
+  completed?: boolean;
+  limit?: number;
+  offset?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TodoApiService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = '/api/todos';
 
-  list(): Observable<TodoListResponse> {
+  list(params: TodoListParams = {}): Observable<TodoListResponse> {
+    let httpParams = new HttpParams();
+    if (params.completed !== undefined) {
+      httpParams = httpParams.set('completed', params.completed ? 'true' : 'false');
+    }
+    if (params.limit !== undefined) {
+      httpParams = httpParams.set('limit', params.limit.toString());
+    }
+    if (params.offset !== undefined) {
+      httpParams = httpParams.set('offset', params.offset.toString());
+    }
+
     return this.http
-      .get<TodoListDto | TodoDto[]>(this.baseUrl)
+      .get<TodoListDto | TodoDto[]>(this.baseUrl, { params: httpParams })
       .pipe(map(mapTodoListResponse));
   }
 

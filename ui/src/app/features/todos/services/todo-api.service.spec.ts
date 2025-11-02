@@ -50,6 +50,20 @@ describe('TodoApiService', () => {
     expect(items).toEqual(['Example todo']);
   });
 
+  it('applies list query parameters', () => {
+    service.list({ completed: true, limit: 5, offset: 10 }).subscribe();
+
+    const req = httpMock.expectOne(
+      (request) =>
+        request.url === '/api/todos' &&
+        request.params.get('completed') === 'true' &&
+        request.params.get('limit') === '5' &&
+        request.params.get('offset') === '10',
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({ items: [], total: 0, limit: 5, offset: 10 });
+  });
+
   it('creates a todo', () => {
     let createdTitle: string | undefined;
     service.create({ title: 'New', description: null }).subscribe((todo) => {

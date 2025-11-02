@@ -13,6 +13,72 @@
   gap: 1rem;
 }
 
+.todos-page__toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.todos-page__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(226, 232, 240, 0.8);
+}
+
+.todos-page__filter {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  cursor: pointer;
+  background: rgba(148, 163, 184, 0.18);
+  color: #e2e8f0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.todos-page__filter:hover {
+  transform: translateY(-1px);
+  background: rgba(148, 163, 184, 0.28);
+}
+
+.todos-page__filter--active {
+  background: linear-gradient(135deg, #38bdf8, #a855f7);
+  color: #0f172a;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
+}
+
+.todos-page__pagination {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.todos-page__pagination button {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.6);
+  color: #f8fafc;
+  border-radius: 999px;
+  padding: 0.45rem 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.todos-page__pagination button:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(15, 23, 42, 0.75);
+}
+
+.todos-page__pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .todos-page__subtitle {
   margin-top: 0.5rem;
   color: rgba(226, 232, 240, 0.8);
@@ -160,5 +226,14 @@
   .todos-page__actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .todos-page__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .todos-page__pagination {
+    justify-content: space-between;
   }
 }

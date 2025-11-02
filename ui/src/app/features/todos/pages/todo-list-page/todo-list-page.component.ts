@@ -4,7 +4,9 @@ import { finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 import { Todo } from '../../models/todo.model';
-import { TodoApiService } from '../../services/todo-api.service';
+import { TodoApiService, TodoListParams } from '../../services/todo-api.service';
+
+type TodoFilter = 'all' | 'open' | 'done';
 
 @Component({
   selector: 'app-todo-list-page',
@@ -16,15 +18,23 @@ export class TodoListPageComponent {
   private readonly todoApi = inject(TodoApiService);
   private readonly router = inject(Router);
 
+  private readonly pageSize = 10;
+  private readonly offset = signal<number>(0);
+  private readonly filter = signal<TodoFilter>('all');
+
   readonly loading = signal<boolean>(true);
   readonly errorMessage = signal<string | null>(null);
   readonly todos = signal<Todo[]>([]);
   private readonly flashSignal = signal<string | null>(null);
+  private readonly hasNextPageSignal = signal<boolean>(false);
   readonly refreshing = computed(
     () => this.loading() && !this.todos().length && !this.errorMessage(),
   );
   readonly hasTodos = computed(() => this.todos().length > 0);
   readonly hasError = computed(() => this.errorMessage() !== null);
+  readonly currentFilter = computed(() => this.filter());
+  readonly hasNextPage = computed(() => this.hasNextPageSignal());
+  readonly hasPreviousPage = computed(() => this.offset() > 0);
   readonly flashMessage = computed(() => this.flashSignal());
 
   constructor() {
@@ -45,15 +55,32 @@ export class TodoListPageComponent {
   refresh(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
+    const params: TodoListParams = {
+      limit: this.pageSize,
+      offset: this.offset(),
+    };
+
+    const filter = this.filter();
+    if (filter !== 'all') {
+      params.completed = filter === 'done';
+    }
+
     this.todoApi
-      .list()
+      .list(params)
       .pipe(
         finalize(() => this.loading.set(false)),
         takeUntilDestroyed(),
       )
       .subscribe({
         next: (response) => {
+          if (response.items.length === 0 && this.offset() > 0) {
+            this.offset.update((value) => Math.max(0, value - this.pageSize));
+            this.refresh();
+            return;
+          }
+
           this.todos.set(response.items);
+          this.hasNextPageSignal.set(response.items.length === this.pageSize);
         },
         error: (error: unknown) => {
           console.error('Failed to load todos', error);
@@ -64,6 +91,31 @@ export class TodoListPageComponent {
 
   createTodo(): void {
     this.router.navigate(['/todos/new']);
+  }
+
+  setFilter(filter: TodoFilter): void {
+    if (this.filter() === filter && this.offset() === 0) {
+      return;
+    }
+    this.filter.set(filter);
+    this.offset.set(0);
+    this.refresh();
+  }
+
+  nextPage(): void {
+    if (!this.hasNextPage()) {
+      return;
+    }
+    this.offset.update((value) => value + this.pageSize);
+    this.refresh();
+  }
+
+  previousPage(): void {
+    if (!this.hasPreviousPage()) {
+      return;
+    }
+    this.offset.update((value) => Math.max(0, value - this.pageSize));
+    this.refresh();
   }
 
   editTodo(todo: Todo): void {
@@ -79,13 +131,7 @@ export class TodoListPageComponent {
         takeUntilDestroyed(),
       )
       .subscribe({
-        next: (updated) => {
-          this.todos.set(
-            this.todos().map((item) =>
-              item.id === updated.id ? updated : item,
-            ),
-          );
-        },
+        next: () => this.refresh(),
         error: (error: unknown) => {
           console.error('Failed to toggle todo', error);
           this.errorMessage.set('Unable to update todo. Please try again.');
@@ -105,9 +151,7 @@ export class TodoListPageComponent {
         takeUntilDestroyed(),
       )
       .subscribe({
-        next: () => {
-          this.todos.set(this.todos().filter((item) => item.id !== todo.id));
-        },
+        next: () => this.refresh(),
         error: (error: unknown) => {
           console.error('Failed to delete todo', error);
           this.errorMessage.set('Unable to delete todo. Please try again.');

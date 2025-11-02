@@ -11,6 +11,45 @@
     </button>
   </header>
 
+  <section class="todos-page__toolbar" aria-label="Todo filters">
+    <div class="todos-page__filters">
+      <span>Filter:</span>
+      <button
+        type="button"
+        class="todos-page__filter"
+        [class.todos-page__filter--active]="currentFilter() === 'all'"
+        (click)="setFilter('all')"
+      >
+        All
+      </button>
+      <button
+        type="button"
+        class="todos-page__filter"
+        [class.todos-page__filter--active]="currentFilter() === 'open'"
+        (click)="setFilter('open')"
+      >
+        Open
+      </button>
+      <button
+        type="button"
+        class="todos-page__filter"
+        [class.todos-page__filter--active]="currentFilter() === 'done'"
+        (click)="setFilter('done')"
+      >
+        Completed
+      </button>
+    </div>
+
+    <div class="todos-page__pagination">
+      <button type="button" (click)="previousPage()" [disabled]="!hasPreviousPage() || loading()">
+        ‹ Previous
+      </button>
+      <button type="button" (click)="nextPage()" [disabled]="!hasNextPage() || loading()">
+        Next ›
+      </button>
+    </div>
+  </section>
+
   @if (flashMessage()) {
     <div class="todos-page__alert todos-page__alert--success">
       {{ flashMessage() }}
@@ -29,7 +68,15 @@
   } @else {
     @if (!hasTodos()) {
       <div class="todos-page__empty">
-        <p>No todos yet. Create your first task to get started.</p>
+        <p>
+          @if (currentFilter() === 'all') {
+            No todos yet. Create your first task to get started.
+          } @else if (currentFilter() === 'open') {
+            No open todos right now.
+          } @else {
+            No completed todos yet.
+          }
+        </p>
         <button type="button" (click)="createTodo()">Create Todo</button>
       </div>
     } @else {
