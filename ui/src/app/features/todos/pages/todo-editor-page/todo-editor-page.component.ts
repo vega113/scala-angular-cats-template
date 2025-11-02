@@ -55,6 +55,9 @@ export class TodoEditorPageComponent {
 
     // Set initial form validity
     this.formValid.set(this.form.valid);
+
+    // Mark title as touched initially to show validation immediately
+    this.form.controls.title.markAsTouched();
     this.route.paramMap
       .pipe(
         switchMap((params) => {
