@@ -10,9 +10,9 @@
 | T-1309 | 🟢 | Backend: account activation tokens & flow | 5h | T-1303 |
 | T-1310 | 🟢 | Frontend: activation UX (pending screen, activation page) | 5h | T-1305, T-1309 |
 | T-1311 | 🟢 | Frontend: todo creation UX polish | 2h | T-1306 |
-| T-1306 | 🟡 | Frontend: todo UI enhancements | 5h | — | List filters, CRUD UX, align with backend responses |
-| T-1307 | 🟡 | Tooling & docs: tests, smoke updates, README/runbook | 3h | — | Ensure `npm --prefix ui test` real tests, docs for EMAIL_* env vars |
-| T-1308 | 🟡 | Final integration, manual QA, PR wrap-up | 2h | — | End-to-end verification, update task statuses |
+| T-1306 | 🟢 | Frontend: todo UI enhancements | 5h | — | Filters, pagination, CRUD UX polish |
+| T-1307 | 🟢 | Tooling & docs: tests, smoke updates, README/runbook | 3h | — | Updated docs, smoke script requires activated account |
+| T-1308 | 🟢 | Final integration, manual QA, PR wrap-up | 2h | — | Checklist in `manual-qa.md`, statuses updated |
 
 ## Definition of Done (Feature)
 - [ ] Backend password reset endpoints pass unit/integration tests and hide sensitive data.
