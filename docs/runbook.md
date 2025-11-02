@@ -13,6 +13,9 @@ This runbook covers the operational tasks needed to keep the Scala + Angular tem
 - **Front-end:** Served by the backend in prod (`ANGULAR_MODE=prod`); Angular dev server runs only in local dev (`ANGULAR_MODE=dev`).
 - **Database:** PostgreSQL reached via `DATABASE_URL`; migrations run automatically through Flyway on startup.
 - **Authentication:** JWT with shared secret `JWT_SECRET`. Default token TTL is `JWT_TTL` seconds.
+- **Activation:** New accounts receive an activation link. In dev/logging mode the URL is logged as
+  `Sending account activation email` — capture the `token` query parameter and confirm via
+  `POST /api/auth/activation/confirm` if manual intervention is required.
 - **Logs:** JSON structured logs emitted via Logback; contain `@timestamp`, `level`, `logger_name`, `message`, `requestId`, `userId` (when authenticated).
 - **Configuration:** All runtime settings set via environment variables; default values live in `src/main/resources/application.conf`.
 
@@ -78,6 +81,8 @@ Use environment variables to tune behaviour; after setting a var, restart the dy
 | `TODO_DEFAULT_PAGE_SIZE` / `TODO_MAX_PAGE_SIZE` | Paging controls for `/api/todos`. | Tighten to reduce payload size under load. |
 | `LOG_LEVEL` | Logging verbosity (`INFO` default). | Set to `DEBUG` temporarily when diagnosing issues; revert after. |
 | `TRACING_ENABLED` | Enables natchez tracing scaffold. | Turn on when tracing backend requests (requires endpoint wiring). |
+| `EMAIL_PROVIDER` / related | Email delivery config (logging vs. external) plus subjects/URLs. | Defaults log payloads in dev; set provider/API key when wiring a real service. |
+| `PASSWORD_RESET_TOKEN_TTL` / `ACTIVATION_TOKEN_TTL` | Lifetime for reset + activation tokens. | Increase during support incidents requiring longer windows; keep short for security. |
 
 Apply updates:
 ```bash

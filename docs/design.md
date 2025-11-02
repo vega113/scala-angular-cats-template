@@ -133,7 +133,7 @@ AngularDevServer --> Dev: Render UI
 
 ## Configuration Summary
 - Ports: backend `8080`, Angular dev `4200`.
-- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, `EMAIL_API_KEY`, `EMAIL_RESET_SUBJECT`, `EMAIL_ACTIVATION_SUBJECT`, `EMAIL_ACTIVATION_URL_BASE`, `PASSWORD_RESET_URL_BASE`, `PASSWORD_RESET_TOKEN_TTL`, `LOG_LEVEL`, `TRACING_ENABLED` (see [Configuration & Environments](requirements.md#configuration--environments) for defaults and [Timeouts & Pool Sizing](tech.md#timeouts--pool-sizing) for tuning guidance).
+- Env vars: `BACKEND_HOST`, `BACKEND_PORT`, `HTTP_PORT`, `ANGULAR_MODE`, `ANGULAR_PORT`, `DATABASE_URL`, `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA`, `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT`, `JWT_SECRET`, `JWT_TTL`, `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`, `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, `EMAIL_API_KEY`, `EMAIL_RESET_SUBJECT`, `EMAIL_ACTIVATION_SUBJECT`, `EMAIL_ACTIVATION_URL_BASE`, `PASSWORD_RESET_URL_BASE`, `PASSWORD_RESET_TOKEN_TTL`, `ACTIVATION_TOKEN_TTL`, `LOG_LEVEL`, `TRACING_ENABLED` (see [Configuration & Environments](requirements.md#configuration--environments) for defaults and [Timeouts & Pool Sizing](tech.md#timeouts--pool-sizing) for tuning guidance).
 
 ## Directory Structure (high level)
 - Root SBT project: `build.sbt`, `project/`.

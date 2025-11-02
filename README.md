@@ -60,13 +60,17 @@ Environment variables (see docs/requirements.md for full list):
 - `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`
 - `LOG_LEVEL` (JSON logs)
 - `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, `EMAIL_API_KEY`, `EMAIL_RESET_SUBJECT`, `EMAIL_ACTIVATION_SUBJECT`, `EMAIL_ACTIVATION_URL_BASE`
-- `PASSWORD_RESET_URL_BASE`, `PASSWORD_RESET_TOKEN_TTL`
+- `PASSWORD_RESET_URL_BASE`, `PASSWORD_RESET_TOKEN_TTL`, `ACTIVATION_TOKEN_TTL`
 - `TRACING_ENABLED` (optional natchez scaffold)
 
 ## Testing
 - Backend unit/integration: `sbt test`
 - Frontend unit: `npm --prefix ui test`
 - End-to-end smoke (requires API running locally): `scripts/smoke.sh`
+  - Provide `SMOKE_EMAIL`/`SMOKE_PASSWORD` for an activated test account: 
+    ```bash
+    SMOKE_EMAIL=user@example.com SMOKE_PASSWORD=secret scripts/smoke.sh
+    ```
 - Pre-push helper (formats, tests, lints, builds): `scripts/pre-push.sh`
 
 ## Logging & Tracing

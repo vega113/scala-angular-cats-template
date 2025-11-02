@@ -3,8 +3,8 @@
 set -euo pipefail
 
 BASE_URL=${BASE_URL:-http://localhost:8080}
-EMAIL="smoke_${RANDOM}@example.com"
-PASSWORD="P@ssw0rd123"
+EMAIL=${SMOKE_EMAIL:-}
+PASSWORD=${SMOKE_PASSWORD:-}
 
 log() {
   printf '[smoke] %s\n' "$*"
@@ -20,13 +20,17 @@ require_cmd() {
 require_cmd curl
 require_cmd python3
 
+if [ -z "$EMAIL" ] || [ -z "$PASSWORD" ]; then
+  cat <<'EOF' >&2
+[smoke] Missing SMOKE_EMAIL/SMOKE_PASSWORD environment variables.
+[smoke] Provide credentials for an already activated account, e.g.:
+[smoke]   SMOKE_EMAIL=user@example.com SMOKE_PASSWORD=secret scripts/smoke.sh
+EOF
+  exit 1
+fi
+
 log "Base URL: $BASE_URL"
-
-signup_response=$(curl -sS --fail -X POST "$BASE_URL/api/auth/signup" \
-  -H 'Content-Type: application/json' \
-  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
-
-log "Signup response: $signup_response"
+log "Using account: $EMAIL"
 
 login_response=$(curl -sS --fail -X POST "$BASE_URL/api/auth/login" \
   -H 'Content-Type: application/json' \
