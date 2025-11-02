@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { finalize } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -17,6 +17,7 @@ type TodoFilter = 'all' | 'open' | 'done';
 export class TodoListPageComponent {
   private readonly todoApi = inject(TodoApiService);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly pageSize = 10;
   private readonly offset = signal<number>(0);
@@ -69,7 +70,7 @@ export class TodoListPageComponent {
       .list(params)
       .pipe(
         finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: (response) => {
@@ -128,7 +129,7 @@ export class TodoListPageComponent {
       .toggle(todo.id)
       .pipe(
         finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: () => this.refresh(),
@@ -148,7 +149,7 @@ export class TodoListPageComponent {
       .delete(todo.id)
       .pipe(
         finalize(() => this.loading.set(false)),
-        takeUntilDestroyed(),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: () => this.refresh(),
