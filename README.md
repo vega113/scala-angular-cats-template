@@ -56,7 +56,7 @@ Environment variables (see docs/requirements.md for full list):
 - `DATABASE_URL` (Heroku-style JDBC string)
 - `DB_USER`, `DB_PASSWORD`, `DB_SCHEMA` (override defaults when not using `DATABASE_URL`)
 - `DB_MAX_POOL_SIZE`, `DB_MIN_IDLE`, `DB_CONNECTION_TIMEOUT` (Hikari tuning)
-- `JWT_SECRET`, `JWT_TTL`
+- `JWT_SECRET`, `JWT_TTL` (finite duration, default `7d`)
 - `TODO_DEFAULT_PAGE_SIZE`, `TODO_MAX_PAGE_SIZE`
 - `LOG_LEVEL` (JSON logs)
 - `EMAIL_PROVIDER`, `EMAIL_FROM_ADDRESS`, `EMAIL_API_KEY`, `EMAIL_RESET_SUBJECT`, `EMAIL_ACTIVATION_SUBJECT`, `EMAIL_ACTIVATION_URL_BASE`

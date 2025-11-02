@@ -32,6 +32,10 @@ object ConfigLoader:
       sys.env
         .get("PASSWORD_RESET_TOKEN_TTL")
         .flatMap(parseFiniteDuration)
+    val jwtTtl =
+      sys.env
+        .get("JWT_TTL")
+        .flatMap(parseFiniteDuration)
     val emailProvider = sys.env.get("EMAIL_PROVIDER").map(_.trim).filter(_.nonEmpty)
     val emailFromAddress = sys.env.get("EMAIL_FROM_ADDRESS").map(_.trim).filter(_.nonEmpty)
     val emailApiKey = sys.env.get("EMAIL_API_KEY").map(_.trim).filter(_.nonEmpty)
@@ -64,6 +68,10 @@ object ConfigLoader:
       tokenTtl = passwordResetTtl.getOrElse(cfg.passwordReset.tokenTtl)
     )
 
+    val updatedJwt = cfg.jwt.copy(
+      ttl = jwtTtl.getOrElse(cfg.jwt.ttl)
+    )
+
     val activationTtl =
       sys.env
         .get("ACTIVATION_TOKEN_TTL")
@@ -76,6 +84,7 @@ object ConfigLoader:
     cfg.copy(
       angular = updatedAngular,
       tracing = updatedTracing,
+      jwt = updatedJwt,
       email = updatedEmail,
       passwordReset = updatedPasswordReset,
       activation = updatedActivation

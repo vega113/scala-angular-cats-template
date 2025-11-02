@@ -26,11 +26,13 @@ describe('LoginPageComponent', () => {
       providers: [{ provide: AuthService, useClass: AuthServiceStub }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(LoginPageComponent);
-    component = fixture.componentInstance;
     authService = TestBed.inject(AuthService) as unknown as AuthServiceStub;
     router = TestBed.inject(Router);
+    spyOn(router, 'getCurrentNavigation').and.returnValue(null);
     spyOn(router, 'navigate').and.returnValue(Promise.resolve(true));
+
+    fixture = TestBed.createComponent(LoginPageComponent);
+    component = fixture.componentInstance;
   });
 
   it('should disable submit when form invalid', () => {
@@ -54,5 +56,15 @@ describe('LoginPageComponent', () => {
 
     component.submit();
     expect(component.errorMessage()).toBeTruthy();
+  });
+
+  it('shows session expiration message when navigation state is flagged', () => {
+    window.history.replaceState({ sessionExpired: true }, '', '/auth/login');
+    const sessionFixture = TestBed.createComponent(LoginPageComponent);
+    const sessionComponent = sessionFixture.componentInstance;
+
+    expect(sessionComponent.errorMessage()).toBe('Your session expired. Please sign in again.');
+
+    window.history.replaceState(null, '', window.location.pathname);
   });
 });

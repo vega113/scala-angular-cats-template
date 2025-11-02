@@ -30,7 +30,7 @@ import java.util.UUID
 class AuthRoutesSpec extends CatsEffectSuite {
   private val passwordHasher = PasswordHasher.bcrypt[IO]()
   private val jwtService =
-    JwtService[IO](JwtConfig(secret = Some("test-secret"), ttl = 3600)).unsafeRunSync()
+    JwtService[IO](JwtConfig(secret = Some("test-secret"), ttl = 3600.seconds)).unsafeRunSync()
 
   private def setupRoutes(
     passwordReset: PasswordResetService[IO] = stubPasswordResetService(),

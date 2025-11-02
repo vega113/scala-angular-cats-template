@@ -26,7 +26,7 @@ export const authInterceptor: HttpInterceptorFn = (
 
   return next(authRequest).pipe(
     catchError((error: unknown) =>
-      handleUnauthorized(error, authTokenService, router),
+      handleUnauthorized(error, authTokenService, router, token !== null),
     ),
   );
 };
@@ -35,10 +35,14 @@ function handleUnauthorized(
   error: unknown,
   authTokenService: AuthTokenService,
   router: Router,
+  hadToken: boolean,
 ) {
-  if (error instanceof HttpErrorResponse && error.status === 401) {
+  if (error instanceof HttpErrorResponse && error.status === 401 && hadToken) {
     authTokenService.clearToken();
-    router.navigate(['/auth/login'], { replaceUrl: true });
+    router.navigate(['/auth/login'], {
+      replaceUrl: true,
+      state: { sessionExpired: true },
+    });
   }
   return throwError(() => error);
 }

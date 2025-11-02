@@ -20,7 +20,7 @@ final case class DbConfig(
   minimumIdle: Int = 0,
   connectionTimeout: FiniteDuration = 30.seconds
 ) derives ConfigReader
-final case class JwtConfig(secret: Option[String], ttl: Int) derives ConfigReader
+final case class JwtConfig(secret: Option[String], ttl: FiniteDuration) derives ConfigReader
 final case class LoggingConfig(level: String) derives ConfigReader
 final case class EmailConfig(
   provider: String = "logging",

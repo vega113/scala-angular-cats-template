@@ -24,7 +24,7 @@ object JwtService {
         for {
           logger <- Slf4jLogger.create[F]
         } yield new JwtService[F] {
-          private val ttlSeconds = config.ttl.toLong
+          private val ttlSeconds = config.ttl.toSeconds
 
           override def generate(payload: JwtPayload): F[String] =
             for

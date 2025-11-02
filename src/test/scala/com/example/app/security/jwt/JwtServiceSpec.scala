@@ -2,11 +2,12 @@ package com.example.app.security.jwt
 
 import cats.effect.IO
 import com.example.app.config.JwtConfig
+import scala.concurrent.duration.*
 import munit.CatsEffectSuite
 import java.util.UUID
 
 class JwtServiceSpec extends CatsEffectSuite:
-  private val config = JwtConfig(secret = Some("test-secret"), ttl = 3600)
+  private val config = JwtConfig(secret = Some("test-secret"), ttl = 3600.seconds)
 
   test("generate and verify round-trip") {
     for
@@ -26,6 +27,6 @@ class JwtServiceSpec extends CatsEffectSuite:
 
   test("fails when secret missing") {
     interceptMessageIO[IllegalStateException]("JWT secret is not configured") {
-      JwtService[IO](JwtConfig(secret = None, ttl = 3600))
+      JwtService[IO](JwtConfig(secret = None, ttl = 3600.seconds))
     }.void
   }

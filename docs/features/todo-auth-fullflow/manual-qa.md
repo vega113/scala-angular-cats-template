@@ -15,6 +15,7 @@ Use this checklist before merging feature work to `main`. All steps assume a loc
    ```
    Expect HTTP 204/200.
 6. Log in with the activated account and verify you land on the todos page.
+7. Manually shorten the JWT lifetime (e.g., set `JWT_TTL=1s`) and restart the app. After the token expires, trigger an authenticated action (e.g., refresh `/todos`). Confirm the UI displays the session-expired banner and redirects to the login screen.
 
 ## 2. Todo CRUD + Filters
 1. Create a new todo (no due date) and confirm the list flashes the success message.

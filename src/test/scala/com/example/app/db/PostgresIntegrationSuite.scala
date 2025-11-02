@@ -139,7 +139,7 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
         schema = Some("app"),
         maxPoolSize = 4
       ),
-      jwt = JwtConfig(secret = None, ttl = 3600),
+      jwt = JwtConfig(secret = None, ttl = 3600.seconds),
       logging = LoggingConfig(level = "INFO"),
       email = EmailConfig(
         provider = "logging",

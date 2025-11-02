@@ -25,6 +25,20 @@ export class LoginPageComponent {
   readonly errorMessage = computed(() => this.errorSignal());
   readonly loading = this.authService.loading;
 
+  constructor() {
+    const navigation = this.router.getCurrentNavigation();
+    const navigationState = navigation?.extras?.state as Record<string, unknown> | undefined;
+    const historyState =
+      typeof window !== 'undefined'
+        ? (window.history.state as Record<string, unknown> | undefined)
+        : undefined;
+    const sessionExpired =
+      (navigationState?.['sessionExpired'] ?? historyState?.['sessionExpired']) === true;
+    if (sessionExpired) {
+      this.errorSignal.set('Your session expired. Please sign in again.');
+    }
+  }
+
   submit(): void {
     if (this.form.invalid || this.loading()) {
       this.form.markAllAsTouched();

@@ -42,7 +42,7 @@ describe('authInterceptor', () => {
   beforeEach(() => {
     authTokenService = new AuthTokenServiceStub();
     authTokenService.setToken('abc123');
-    navigateSpy = jasmine.createSpy('navigate');
+    navigateSpy = jasmine.createSpy('navigate').and.returnValue(Promise.resolve(true));
 
     TestBed.configureTestingModule({
       providers: [
@@ -51,7 +51,10 @@ describe('authInterceptor', () => {
         { provide: AuthTokenService, useValue: authTokenService },
         {
           provide: Router,
-          useValue: { navigate: navigateSpy },
+          useValue: {
+            navigate: navigateSpy,
+            getCurrentNavigation: () => null,
+          },
         },
       ],
     });
@@ -86,6 +89,7 @@ describe('authInterceptor', () => {
     expect(authTokenService.hasToken()).toBeFalse();
     expect(navigateSpy).toHaveBeenCalledWith(['/auth/login'], {
       replaceUrl: true,
+      state: { sessionExpired: true },
     });
     expect(capturedError?.status).toBe(401);
   });
