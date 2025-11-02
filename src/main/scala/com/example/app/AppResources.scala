@@ -2,7 +2,11 @@ package com.example.app
 
 import cats.effect.{IO, Resource}
 import cats.syntax.all._
-import com.example.app.auth.{AccountActivationTokenRepository, PasswordResetTokenRepository, UserRepository}
+import com.example.app.auth.{
+  AccountActivationTokenRepository,
+  PasswordResetTokenRepository,
+  UserRepository
+}
 import com.example.app.config.AppConfig
 import com.example.app.db.TransactorBuilder
 import com.example.app.security.PasswordHasher

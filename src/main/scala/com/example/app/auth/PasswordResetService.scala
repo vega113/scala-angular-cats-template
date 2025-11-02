@@ -61,7 +61,7 @@ object PasswordResetService {
                 token = token
               )
             yield ()
-         case None =>
+          case None =>
             // Avoid disclosing whether a user exists.
             F.unit
         }
@@ -106,7 +106,8 @@ object PasswordResetService {
         value.trim.toLowerCase
 
       private def buildResetUrl(token: String): F[String] =
-        F.fromEither(Uri.fromString(deps.config.resetUrlBase)).map(_.withQueryParam("token", token).renderString)
+        F.fromEither(Uri.fromString(deps.config.resetUrlBase))
+          .map(_.withQueryParam("token", token).renderString)
 
       private def validatePassword(password: String): F[Unit] =
         val trimmed = password.trim

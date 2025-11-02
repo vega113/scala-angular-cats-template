@@ -1,7 +1,14 @@
 package com.example.app.http
 
 import cats.effect.IO
-import com.example.app.auth.{AccountActivationService, AuthError, AuthResult, AuthService, PasswordResetService, User}
+import com.example.app.auth.{
+  AccountActivationService,
+  AuthError,
+  AuthResult,
+  AuthService,
+  PasswordResetService,
+  User
+}
 import com.example.app.security.jwt.JwtPayload
 import io.circe.generic.semiauto.*
 import io.circe.syntax.*
@@ -85,7 +92,8 @@ final class AuthRoutes(
           ApiResponse.error(ApiError.notFound("password_reset_invalid", "Invalid or expired token"))
         case Left(PasswordResetService.Error.TokenExpired) =>
           ApiResponse.error(
-            ApiError.unprocessableEntity("password_reset_expired", "Password reset token has expired")
+            ApiError
+              .unprocessableEntity("password_reset_expired", "Password reset token has expired")
           )
         case Left(_) =>
           ApiResponse.error(
@@ -159,7 +167,8 @@ object AuthRoutes {
   private given EntityDecoder[IO, SignupRequest] = jsonOf[IO, SignupRequest]
   private given EntityDecoder[IO, LoginRequest] = jsonOf[IO, LoginRequest]
   private given EntityDecoder[IO, PasswordResetRequest] = jsonOf[IO, PasswordResetRequest]
-  private given EntityDecoder[IO, PasswordResetConfirmRequest] = jsonOf[IO, PasswordResetConfirmRequest]
+  private given EntityDecoder[IO, PasswordResetConfirmRequest] =
+    jsonOf[IO, PasswordResetConfirmRequest]
   private given EntityDecoder[IO, ActivationConfirmRequest] = jsonOf[IO, ActivationConfirmRequest]
 
   private given Encoder[UserResponse] = deriveEncoder

@@ -55,7 +55,8 @@ object PasswordResetTokenRepository {
       sql"""SELECT id, user_id, token_hash, expires_at, consumed_at, created_at
             FROM password_reset_tokens
             WHERE token_hash = $tokenHash
-         """.query[(UUID, UUID, String, Instant, Option[Instant], Instant)]
+         """
+        .query[(UUID, UUID, String, Instant, Option[Instant], Instant)]
         .map { case (id, userId, hash, expires, consumed, created) =>
           PasswordResetToken(id, userId, hash, expires, consumed, created)
         }

@@ -3,7 +3,13 @@ package com.example.app.http
 import cats.data.{Kleisli, OptionT}
 import cats.effect.IO
 import cats.syntax.all.*
-import com.example.app.auth.{AccountActivationService, AuthResult, AuthService, PasswordResetService, User}
+import com.example.app.auth.{
+  AccountActivationService,
+  AuthResult,
+  AuthService,
+  PasswordResetService,
+  User
+}
 import com.example.app.config.TodoConfig
 import com.example.app.http.middleware.BearerAuthMiddleware.AuthUser
 import com.example.app.security.jwt.JwtPayload

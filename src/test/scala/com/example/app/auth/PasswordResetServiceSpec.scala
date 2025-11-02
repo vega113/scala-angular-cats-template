@@ -144,7 +144,8 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
     yield assertEquals(result.left.toOption, Some(PasswordResetService.Error.InvalidToken))
   }
 
-  private final class InMemoryUserRepository(state: Ref[IO, Map[UUID, User]]) extends UserRepository[IO] {
+  private final class InMemoryUserRepository(state: Ref[IO, Map[UUID, User]])
+      extends UserRepository[IO] {
     override def create(email: String, passwordHash: String): IO[User] =
       for
         id <- IO(UUID.randomUUID())
@@ -164,7 +165,8 @@ class PasswordResetServiceSpec extends CatsEffectSuite {
         now <- IO.realTimeInstant
         _ <- state.update { users =>
           users.get(id) match
-            case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case Some(user) =>
+              users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
             case None => users
         }
       yield ()

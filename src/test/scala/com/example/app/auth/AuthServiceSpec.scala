@@ -99,7 +99,8 @@ class AuthServiceSpec extends CatsEffectSuite:
         now <- IO.realTimeInstant
         _ <- ref.update { users =>
           users.get(id) match
-            case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case Some(user) =>
+              users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
             case None => users
         }
       yield ()

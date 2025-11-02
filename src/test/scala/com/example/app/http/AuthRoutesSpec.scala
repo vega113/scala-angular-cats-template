@@ -3,7 +3,13 @@ package com.example.app.http
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.implicits._
-import com.example.app.auth.{AccountActivationService, AuthService, PasswordResetService, User, UserRepository}
+import com.example.app.auth.{
+  AccountActivationService,
+  AuthService,
+  PasswordResetService,
+  User,
+  UserRepository
+}
 import com.example.app.config.JwtConfig
 import com.example.app.auth.AccountActivationService
 import com.example.app.auth.AccountActivationService.Error as ActivationError
@@ -28,7 +34,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   private def setupRoutes(
     passwordReset: PasswordResetService[IO] = stubPasswordResetService(),
-    activationFactory: InMemoryUserRepo => AccountActivationService[IO] = _ => stubActivationService()
+    activationFactory: InMemoryUserRepo => AccountActivationService[IO] = _ =>
+      stubActivationService()
   ): IO[(AuthRoutes, InMemoryUserRepo, AccountActivationService[IO])] =
     for
       ref <- Ref.of[IO, Map[UUID, User]](Map.empty)
@@ -39,25 +46,31 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   test("signup requires activation and triggers email") {
     Ref.of[IO, Option[String]](None).flatMap { seenEmail =>
-      val activationStub = stubActivationService(issueHandler = user => seenEmail.set(Some(user.email)))
+      val activationStub =
+        stubActivationService(issueHandler = user => seenEmail.set(Some(user.email)))
       setupRoutes(activationFactory = _ => activationStub).flatMap { case (authRoutes, _, _) =>
-      val request = Request[IO](POST, uri"/signup").withEntity(
-        Json.obj(
-          "email" -> Json.fromString("user@example.com"),
-          "password" -> Json.fromString("secret")
+        val request = Request[IO](POST, uri"/signup").withEntity(
+          Json.obj(
+            "email" -> Json.fromString("user@example.com"),
+            "password" -> Json.fromString("secret")
+          )
         )
-      )
 
-      authRoutes.routes.run(request).value.flatMap {
-        case Some(response) =>
-          for
-            _ <- IO(assertEquals(response.status, Status.Accepted))
-            body <- response.as[Json]
-            _ <- IO(assertEquals(body.hcursor.downField("status").as[String], Right("activation_required")))
-            email <- seenEmail.get
-          yield assertEquals(email, Some("user@example.com"))
-        case None => fail("No response")
-      }
+        authRoutes.routes.run(request).value.flatMap {
+          case Some(response) =>
+            for
+              _ <- IO(assertEquals(response.status, Status.Accepted))
+              body <- response.as[Json]
+              _ <- IO(
+                assertEquals(
+                  body.hcursor.downField("status").as[String],
+                  Right("activation_required")
+                )
+              )
+              email <- seenEmail.get
+            yield assertEquals(email, Some("user@example.com"))
+          case None => fail("No response")
+        }
       }
     }
   }
@@ -84,8 +97,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
 
   test("password reset confirm succeeds") {
     Ref.of[IO, List[(String, String)]](List.empty).flatMap { captured =>
-      val stub = stubPasswordResetService(confirmHandler = (token, password) =>
-        captured.update(list => (token, password) :: list)
+      val stub = stubPasswordResetService(confirmHandler =
+        (token, password) => captured.update(list => (token, password) :: list)
       )
       setupRoutes(passwordReset = stub).flatMap { case (authRoutes, _, _) =>
         val request = Request[IO](POST, uri"/password-reset/confirm").withEntity(
@@ -106,8 +119,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
   }
 
   test("password reset confirm handles invalid token") {
-    val stub = stubPasswordResetService(confirmHandler = (_, _) =>
-      IO.raiseError(PasswordResetService.Error.InvalidToken)
+    val stub = stubPasswordResetService(confirmHandler =
+      (_, _) => IO.raiseError(PasswordResetService.Error.InvalidToken)
     )
     setupRoutes(passwordReset = stub).flatMap { case (authRoutes, _, _) =>
       val request = Request[IO](POST, uri"/password-reset/confirm").withEntity(
@@ -132,8 +145,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
   }
 
   test("password reset confirm handles weak passwords") {
-    val stub = stubPasswordResetService(confirmHandler = (_, _) =>
-      IO.raiseError(PasswordResetService.Error.PasswordTooWeak("too short"))
+    val stub = stubPasswordResetService(confirmHandler =
+      (_, _) => IO.raiseError(PasswordResetService.Error.PasswordTooWeak("too short"))
     )
     setupRoutes(passwordReset = stub).flatMap { case (authRoutes, _, _) =>
       val request = Request[IO](POST, uri"/password-reset/confirm").withEntity(
@@ -187,8 +200,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
   }
 
   test("login issues token after activation") {
-    setupRoutes(activationFactory = repo =>
-      stubActivationService(issueHandler = user => repo.markActivated(user.id))
+    setupRoutes(activationFactory =
+      repo => stubActivationService(issueHandler = user => repo.markActivated(user.id))
     ).flatMap { case (authRoutes, _, _) =>
       val email = "login@example.com"
       val password = "secret"
@@ -267,7 +280,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
   }
 
   test("activation endpoint handles invalid token") {
-    val activationStub = stubActivationService(confirmHandler = _ => IO.raiseError(ActivationError.InvalidToken))
+    val activationStub =
+      stubActivationService(confirmHandler = _ => IO.raiseError(ActivationError.InvalidToken))
     setupRoutes(activationFactory = _ => activationStub).flatMap { case (authRoutes, _, _) =>
       val activateReq = Request[IO](POST, uri"/activation/confirm").withEntity(
         Json.obj("token" -> Json.fromString("bad-token"))
@@ -312,8 +326,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
   }
 
   test("me returns user info when token valid") {
-    setupRoutes(activationFactory = repo =>
-      stubActivationService(issueHandler = user => repo.markActivated(user.id))
+    setupRoutes(activationFactory =
+      repo => stubActivationService(issueHandler = user => repo.markActivated(user.id))
     ).flatMap { case (authRoutes, _, _) =>
       val email = "me@example.com"
       val password = "secret"
@@ -365,7 +379,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
         now <- IO.realTimeInstant
         _ <- ref.update { users =>
           users.get(id) match
-            case Some(user) => users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
+            case Some(user) =>
+              users.updated(id, user.copy(passwordHash = passwordHash, updatedAt = now))
             case None => users
         }
       yield ()
@@ -388,7 +403,8 @@ class AuthRoutesSpec extends CatsEffectSuite {
     new PasswordResetService[IO] {
       override def request(email: String): IO[Unit] = requestHandler(email)
 
-      override def confirm(token: String, newPassword: String): IO[Unit] = confirmHandler(token, newPassword)
+      override def confirm(token: String, newPassword: String): IO[Unit] =
+        confirmHandler(token, newPassword)
     }
 
   private def stubActivationService(

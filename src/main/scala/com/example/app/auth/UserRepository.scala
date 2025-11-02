@@ -62,12 +62,14 @@ object UserRepository {
       for
         now <- nowF
         _ <-
-          sql"UPDATE users SET activated = TRUE, updated_at = $now WHERE id = $id".update.run.transact(xa)
+          sql"UPDATE users SET activated = TRUE, updated_at = $now WHERE id = $id".update.run
+            .transact(xa)
       yield ()
 
     private def selectUser(query: Fragment): Query0[User] =
-      query.query[(UUID, String, String, Boolean, Instant, Instant)].map { case (i, e, p, activated, c, u) =>
-        User(i, e, p, activated, c, u)
+      query.query[(UUID, String, String, Boolean, Instant, Instant)].map {
+        case (i, e, p, activated, c, u) =>
+          User(i, e, p, activated, c, u)
       }
   }
 }

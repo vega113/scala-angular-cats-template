@@ -55,16 +55,12 @@ object AccountActivationTokenRepository {
         .transact(xa)
 
     override def consume(tokenId: UUID, at: Instant): F[Unit] =
-      sql"UPDATE activation_tokens SET consumed_at = $at WHERE id = $tokenId"
-        .update
-        .run
+      sql"UPDATE activation_tokens SET consumed_at = $at WHERE id = $tokenId".update.run
         .transact(xa)
         .void
 
     override def invalidateForUser(userId: UUID, at: Instant): F[Unit] =
-      sql"UPDATE activation_tokens SET consumed_at = $at WHERE user_id = $userId AND consumed_at IS NULL"
-        .update
-        .run
+      sql"UPDATE activation_tokens SET consumed_at = $at WHERE user_id = $userId AND consumed_at IS NULL".update.run
         .transact(xa)
         .void
   }
