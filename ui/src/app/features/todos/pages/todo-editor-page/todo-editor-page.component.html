@@ -65,7 +65,7 @@
       }
 
       <div class="todo-editor__actions">
-        <button type="submit" [disabled]="submitting()">
+        <button type="submit" [disabled]="isSubmitDisabled()">
           {{ isEditMode() ? 'Save Changes' : 'Create Todo' }}
         </button>
         <button type="button" (click)="cancel()" class="ghost">Cancel</button>

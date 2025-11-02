@@ -38,6 +38,7 @@ export class TodoEditorPageComponent {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   private readonly currentTodo = signal<Todo | null>(null);
+  readonly formValid = signal<boolean>(false);
 
   readonly isEditMode = computed(() => this.currentTodo() !== null);
   readonly pageTitle = computed(() =>
@@ -45,6 +46,15 @@ export class TodoEditorPageComponent {
   );
 
   constructor() {
+    // Track form validity changes
+    this.form.statusChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.formValid.set(this.form.valid);
+      });
+
+    // Set initial form validity
+    this.formValid.set(this.form.valid);
     this.route.paramMap
       .pipe(
         switchMap((params) => {
@@ -91,14 +101,11 @@ export class TodoEditorPageComponent {
       return;
     }
 
-    const payload = {
-      title: this.form.value.title?.trim() ?? '',
-      description: (this.form.value.description ?? '').trim() || null,
-      dueDate: this.form.value.dueDate
-        ? new Date(this.form.value.dueDate).toISOString()
-        : null,
-      completed: this.form.value.completed ?? false,
-    };
+    const title = this.form.value.title?.trim() ?? '';
+    const description = (this.form.value.description ?? '').trim() || null;
+    const dueDate = this.form.value.dueDate
+      ? new Date(this.form.value.dueDate).toISOString()
+      : null;
 
     this.submitting.set(true);
     this.errorMessage.set(null);
@@ -106,16 +113,28 @@ export class TodoEditorPageComponent {
 
     const todo = this.currentTodo();
     const request$ = todo
-      ? this.todoApi.update(todo.id, payload)
-      : this.todoApi.create(payload);
+      ? this.todoApi.update(todo.id, {
+          title,
+          description,
+          dueDate,
+          completed: this.form.value.completed ?? false,
+        })
+      : this.todoApi.create({
+          title,
+          description,
+          dueDate,
+        });
 
     request$
-      .pipe(finalize(() => this.submitting.set(false)), takeUntilDestroyed())
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (result) => {
           if (!todo) {
             this.currentTodo.set(result);
-            this.router.navigate(['/todos'], { replaceUrl: true });
+            this.router.navigate(['/todos'], {
+              replaceUrl: true,
+              state: { createdTodoId: result.id },
+            });
           } else {
             this.successMessage.set('Todo updated successfully.');
             this.currentTodo.set(result);
@@ -146,6 +165,10 @@ export class TodoEditorPageComponent {
       input.focus();
       input.click();
     }
+  }
+
+  isSubmitDisabled(): boolean {
+    return this.submitting() || !this.formValid();
   }
 }
 
