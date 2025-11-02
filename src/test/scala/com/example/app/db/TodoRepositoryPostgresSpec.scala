@@ -79,10 +79,10 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       http = HttpConfig(port = 0),
       angular = AngularConfig(mode = "dev", port = 4200),
       db = DbConfig(
-        url = Some(container.jdbcUrl),
+        url = Some(s"${container.jdbcUrl}?currentSchema=app"),
         user = Some(container.username),
         password = Some(container.password),
-        schema = None,
+        schema = Some("app"),
         maxPoolSize = 4
       ),
       jwt = JwtConfig(secret = Some("integration"), ttl = 3600),

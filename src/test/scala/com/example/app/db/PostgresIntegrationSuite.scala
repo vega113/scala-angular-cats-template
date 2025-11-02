@@ -133,10 +133,10 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
       http = HttpConfig(port = 0),
       angular = AngularConfig(mode = "dev", port = 4200),
       db = DbConfig(
-        url = Some(container.getJdbcUrl),
+        url = Some(s"${container.getJdbcUrl}?currentSchema=app"),
         user = Some(container.getUsername),
         password = Some(container.getPassword),
-        schema = None,
+        schema = Some("app"),
         maxPoolSize = 4
       ),
       jwt = JwtConfig(secret = None, ttl = 3600),
