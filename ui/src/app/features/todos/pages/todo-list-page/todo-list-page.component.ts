@@ -34,8 +34,8 @@ export class TodoListPageComponent {
       this.flashSignal.set('Todo created successfully.');
       if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
         const currentState = (window.history.state ?? {}) as Record<string, unknown>;
-        const nextState = { ...currentState };
-        delete nextState.createdTodoId;
+        const nextState: Record<string, unknown> = { ...currentState };
+        delete nextState['createdTodoId'];
         window.history.replaceState(nextState, document.title);
       }
     }
