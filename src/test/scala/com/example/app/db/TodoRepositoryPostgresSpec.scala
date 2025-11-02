@@ -22,6 +22,8 @@ import java.time.Instant
 import scala.concurrent.duration.*
 import java.util.UUID
 import scala.concurrent.duration._
+import doobie.implicits._
+import doobie.postgres.implicits.*
 
 class TodoRepositoryPostgresSpec extends CatsEffectSuite {
   private val dockerAvailable = DockerSupport.isAvailable
@@ -39,6 +41,11 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
           val repo = TodoRepository.doobie[IO](xa)
           val userId = UUID.randomUUID()
           for
+            now <- IO.realTimeInstant
+            _ <- sql"""
+                  INSERT INTO users(id, email, password_hash, activated, created_at, updated_at)
+                  VALUES ($userId, 'todo-user@example.com', 'hash', TRUE, $now, $now)
+                """.update.run.transact(xa)
             created <- repo.create(userId, TodoCreate("Task", Some("desc"), None))
             _ <- repo.update(
               userId,
@@ -79,7 +86,7 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       http = HttpConfig(port = 0),
       angular = AngularConfig(mode = "dev", port = 4200),
       db = DbConfig(
-        url = Some(s"${container.jdbcUrl}?currentSchema=app"),
+        url = Some(withSchema(container.jdbcUrl)),
         user = Some(container.username),
         password = Some(container.password),
         schema = Some("app"),
@@ -101,4 +108,7 @@ class TodoRepositoryPostgresSpec extends CatsEffectSuite {
       ),
       activation = ActivationConfig(tokenTtl = 24.hours)
     )
+
+  private def withSchema(jdbcUrl: String): String =
+    if jdbcUrl.contains("?") then s"$jdbcUrl&currentSchema=app" else s"$jdbcUrl?currentSchema=app"
 }

@@ -50,8 +50,8 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
               todosTable <- sql"select to_regclass('app.todos')".query[Option[String]].unique
             yield {
               assertEquals(selectOne, 1)
-              assertEquals(usersTable, Some("app.users"))
-              assertEquals(todosTable, Some("app.todos"))
+              assertEquals(usersTable.map(stripSchema), Some("users"))
+              assertEquals(todosTable.map(stripSchema), Some("todos"))
             }
             checkTables.transact(xa)
           case None => fail("expected transactor")
@@ -133,7 +133,7 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
       http = HttpConfig(port = 0),
       angular = AngularConfig(mode = "dev", port = 4200),
       db = DbConfig(
-        url = Some(s"${container.getJdbcUrl}?currentSchema=app"),
+        url = Some(withSchema(container.getJdbcUrl)),
         user = Some(container.getUsername),
         password = Some(container.getPassword),
         schema = Some("app"),
@@ -157,6 +157,12 @@ class PostgresIntegrationSuite extends CatsEffectSuite:
       ),
       activation = ActivationConfig(tokenTtl = 24.hours)
     )
+
+  private def stripSchema(identifier: String): String =
+    identifier.split('.').lastOption.getOrElse(identifier)
+
+  private def withSchema(jdbcUrl: String): String =
+    if jdbcUrl.contains("?") then s"$jdbcUrl&currentSchema=app" else s"$jdbcUrl?currentSchema=app"
 
 object DockerSupport:
   def isAvailable: Boolean =
