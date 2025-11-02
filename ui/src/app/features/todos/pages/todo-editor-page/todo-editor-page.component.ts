@@ -38,6 +38,7 @@ export class TodoEditorPageComponent {
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
   private readonly currentTodo = signal<Todo | null>(null);
+  readonly formValid = signal<boolean>(false);
 
   readonly isEditMode = computed(() => this.currentTodo() !== null);
   readonly pageTitle = computed(() =>
@@ -45,6 +46,15 @@ export class TodoEditorPageComponent {
   );
 
   constructor() {
+    // Track form validity changes
+    this.form.statusChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => {
+        this.formValid.set(this.form.valid);
+      });
+
+    // Set initial form validity
+    this.formValid.set(this.form.valid);
     this.route.paramMap
       .pipe(
         switchMap((params) => {
@@ -116,7 +126,7 @@ export class TodoEditorPageComponent {
         });
 
     request$
-      .pipe(finalize(() => this.submitting.set(false)), takeUntilDestroyed())
+      .pipe(finalize(() => this.submitting.set(false)))
       .subscribe({
         next: (result) => {
           if (!todo) {
@@ -158,7 +168,7 @@ export class TodoEditorPageComponent {
   }
 
   isSubmitDisabled(): boolean {
-    return this.submitting() || this.form.invalid;
+    return this.submitting() || !this.formValid();
   }
 }
 
