@@ -1,10 +1,11 @@
 .activation-pending {
-  max-width: 520px;
+  max-width: 560px;
   margin: 4rem auto;
   padding: 2.5rem;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -13,22 +14,26 @@
 .activation-pending__header h1 {
   margin: 0 0 0.5rem;
   font-size: 2rem;
+  color: #f1f5f9;
 }
 
 .activation-pending__header p {
   margin: 0;
-  color: #4b5563;
+  color: #94a3b8;
+  line-height: 1.6;
 }
 
 .activation-pending__content {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  color: #1f2937;
+  color: #cbd5e1;
+  line-height: 1.6;
 }
 
 .activation-pending__content strong {
-  color: #111827;
+  color: #f1f5f9;
+  font-weight: 600;
 }
 
 .activation-pending__tips {
@@ -37,42 +42,46 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  color: #4b5563;
+  color: #94a3b8;
+  line-height: 1.6;
 }
 
 .activation-pending__actions {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
+  margin-top: 0.5rem;
 }
 
 .activation-pending__actions button {
   border: none;
-  border-radius: 999px;
-  padding: 0.75rem 1.75rem;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1.5rem;
   cursor: pointer;
   font-weight: 600;
-  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.2s ease;
 }
 
 .activation-pending__actions button:first-child {
-  background: #2563eb;
-  color: #fff;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  background: #3b82f6;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .activation-pending__actions button:first-child:hover {
-  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 .activation-pending__actions .ghost {
   background: transparent;
-  color: #2563eb;
-  border: 1px solid rgba(37, 99, 235, 0.4);
+  color: #cbd5e1;
+  border: 1px solid #334155;
 }
 
 .activation-pending__actions .ghost:hover {
-  background: rgba(37, 99, 235, 0.08);
+  background: #334155;
+  border-color: #475569;
 }
 
 @media (max-width: 600px) {

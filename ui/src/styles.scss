@@ -7,18 +7,37 @@
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: #020617;
-  color: #f8fafc;
+  background: #0f172a;
+  color: #f1f5f9;
   min-height: 100vh;
+  line-height: 1.6;
 }
 
 a {
   color: inherit;
+  transition: color 0.2s ease;
 }
 
 h1,
 h2,
-h3,
+h3 {
+  margin: 0;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
 p {
   margin: 0;
+}
+
+button {
+  font-family: inherit;
 }
